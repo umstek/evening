@@ -1,13 +1,15 @@
 export class Twitter {
-	timer: NodeJS.Timeout | null = null;
-	constructor() {
-		this.timer = null;
-	}
-
+	#timer: NodeJS.Timeout | null = null;
 	#userCellData = new Map<
 		string,
-		{ avatar: string; name: string; handle: string; bio: string }
+		{ avatar: string; name: string; handle: string; bio: string; path: string }
 	>();
+
+	constructor() {
+		this.#timer = setInterval(() => {
+			this.#getUserCellData();
+		}, 1000);
+	}
 
 	#getUserCellData() {
 		const userCells = document.querySelectorAll(
@@ -21,25 +23,39 @@ export class Twitter {
 			const anchors = userCell.querySelectorAll("a");
 			const name = anchors[1]?.textContent || "";
 			const handle = anchors[2]?.textContent || "";
+			// div > div:nth-child(2) does not work! Why?
 			const divs = userCell.querySelectorAll("div");
 			let bio = divs[divs.length - 1]?.textContent || "";
 			if (bio?.startsWith("Click to")) {
 				bio = "";
 			}
 
+			const key = `${window.location.pathname}/__${handle}`;
+
 			if (!this.#userCellData.has(handle)) {
-				this.#userCellData.set(handle, { avatar, name, handle, bio });
+				this.#userCellData.set(handle, {
+					avatar,
+					name,
+					handle,
+					bio,
+					path: window.location.pathname,
+				});
 			}
 		}
 	}
 
 	print() {
-		console.log(this.#userCellData);
+		console.log(Array.from(this.#userCellData.values()));
 	}
 
-	init() {
-		this.timer = setInterval(() => {
-			this.#getUserCellData();
-		}, 1000);
+	[Symbol.asyncDispose]() {
+		if (this.#timer) {
+			clearInterval(this.#timer);
+			this.#timer = null;
+		}
+
+		this.#userCellData.clear();
+
+		return Promise.resolve();
 	}
 }

@@ -7,7 +7,6 @@ function App() {
 	const t = useRef<Twitter>(undefined as never);
 	if (!t.current) {
 		t.current = new Twitter();
-		t.current.init();
 	}
 
 	return (

@@ -2,7 +2,13 @@
 
 Pretty basic OSINT/data gathering userscript.
 
-Currently only supports collecting twitter followers/following data, as you manually scroll. 
+Currently only supports collecting twitter UserCell data, as you manually scroll.
+
+- Followers
+- Following
+- Retweeters (For reposts excluding quote reposts)
+- Likers (only your tweets)
+
 Pressing "print" will log them to the console.
 
 ## Development
