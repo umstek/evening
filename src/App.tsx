@@ -1,4 +1,4 @@
-import { Download } from 'lucide-react';
+import { CircleX, Download } from 'lucide-react';
 import { useRef } from 'react';
 
 import './App.css';
@@ -18,6 +18,14 @@ function App() {
         onClick={() => t.current.downloadAll()}
       >
         <Download />
+      </button>
+
+      <button
+        type="button"
+        id="evening-clear"
+        onClick={() => t.current.clear()}
+      >
+        <CircleX />
       </button>
     </div>
   );

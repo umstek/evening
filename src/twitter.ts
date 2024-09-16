@@ -72,6 +72,21 @@ export class Twitter {
     a.click();
   }
 
+  async clear() {
+    // Clear the timer
+    if (this.#timer) {
+      clearInterval(this.#timer);
+      this.#timer = null;
+    }
+    // Clear the user cell data
+    this.#userCellData.clear();
+    // Clear the store
+    await this.#store.clear();
+    this.#timer = setInterval(() => {
+      this.#getUserCellData();
+    }, 1000);
+  }
+
   [Symbol.dispose]() {
     if (this.#timer) {
       clearInterval(this.#timer);
