@@ -29,13 +29,10 @@ jobs:
       - name: Build project
         run: bun run build
 
-      - name: Zip dist folder
-        run: zip -r dist.zip dist
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         id: create_release
         with:
-          files: dist.zip
+          files: dist/*
           generate_release_notes: true
           make_latest: true
