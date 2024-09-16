@@ -1,8 +1,13 @@
 {
-  "name": "evening",
+  "name": "@umstek/evening",
   "private": true,
   "version": "0.0.5",
   "type": "module",
+  "author": {
+    "name": "Wickramaranga Abeygunawardhana",
+    "email": "umstek@live.com",
+    "url": "https://github.com/umstek"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

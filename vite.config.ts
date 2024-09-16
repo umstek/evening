@@ -9,19 +9,31 @@ export default defineConfig({
     monkey({
       entry: 'src/main.tsx',
       userscript: {
+        author: 'umstek',
+        license: 'MIT',
         icon: 'https://vitejs.dev/logo.svg',
-        namespace: 'npm/vite-plugin-monkey',
+        namespace: 'https://github.com/umstek',
         match: ['https://x.com/*'],
       },
       build: {
+        autoGrant: true,
         externalGlobals: {
           react: cdn.jsdelivr('React', 'umd/react.production.min.js'),
           'react-dom': cdn.jsdelivr(
             'ReactDOM',
             'umd/react-dom.production.min.js',
           ),
+          localforage: cdn.jsdelivr('localforage', 'dist/localforage.min.js'),
+          'lucide-react': cdn.jsdelivr(
+            'lucide-react',
+            'dist/cjs/lucide-react.min.js',
+          ),
         },
       },
     }),
   ],
+  build: {
+    minify: true,
+    cssMinify: true,
+  },
 });
