@@ -2,6 +2,8 @@
 
 Pretty basic OSINT/data gathering userscript.
 
+[![Build and Release Evening](https://github.com/umstek/evening/actions/workflows/main.yml/badge.svg)](https://github.com/umstek/evening/actions/workflows/main.yml)
+
 Currently only supports collecting twitter UserCell data, as you manually scroll
 through twitter
 
