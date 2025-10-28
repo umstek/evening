@@ -40,6 +40,31 @@ class Reddit {
 			`${REDDIT}/r/${subreddit}/comments/${id}/${title}/.json`,
 			UA,
 		);
+
+		// Check if response is OK before proceeding
+		if (!response.ok) {
+			let bodyText = "";
+			try {
+				bodyText = await response.text();
+			} catch (e) {
+				// If we can't get the body text, just continue without it
+			}
+
+			const errorMessage = `Reddit API error: ${response.status} ${response.statusText}${bodyText ? ` - ${bodyText}` : ""}`;
+			logger.error(
+				{
+					subreddit,
+					id,
+					title,
+					statusCode: response.status,
+					statusText: response.statusText,
+					bodyText,
+				},
+				"Non-OK response from Reddit API",
+			);
+			throw new Error(errorMessage);
+		}
+
 		logger.info(
 			{
 				subreddit,
@@ -50,21 +75,46 @@ class Reddit {
 			},
 			"got post",
 		);
-		return response.json();
+
+		// Wrap JSON parsing in try/catch to handle parsing errors
+		try {
+			return await response.json();
+		} catch (parseError) {
+			const errorMessage = `Failed to parse JSON response from Reddit API for post ${id} in subreddit ${subreddit}`;
+			logger.error(
+				{
+					subreddit,
+					id,
+					title,
+					statusCode: response.status,
+					statusText: response.statusText,
+					parseError: parseError instanceof Error ? parseError.message : String(parseError),
+				},
+				"JSON parsing error",
+			);
+			throw new Error(errorMessage);
+		}
 	}
 }
 
 async function main() {
-	await initializeDatabase();
+	try {
+		await initializeDatabase();
 
-	const reddit = new Reddit();
-	const result = await reddit.getPost({
-		subreddit: "interestingasfuck",
-		id: "1oftwfk",
-		title: "photographer_shows_his_pov_vs_the_photos_he_takes",
-	});
+		const reddit = new Reddit();
+		const result = await reddit.getPost({
+			subreddit: "interestingasfuck",
+			id: "1oftwfk",
+			title: "photographer_shows_his_pov_vs_the_photos_he_takes",
+		});
 
-	logger.info({ hasResult: !!result }, "completed");
+		logger.info({ hasResult: !!result }, "completed");
+	} catch (error) {
+		logger.error({ error: error instanceof Error ? error.stack : String(error) }, "Failed to execute main function");
+		process.exit(1);
+	}
 }
 
-main();
+if (require.main === module) {
+    main();
+}
