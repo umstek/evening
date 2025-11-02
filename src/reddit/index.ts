@@ -36,10 +36,9 @@ const UA = {
 class Reddit {
 	@memoize({ provider: "reddit" })
 	async getPost({ subreddit, id, title }: GetPostParams) {
-		const response = await fetch(
-			`${REDDIT}/r/${subreddit}/comments/${id}/${title}/.json`,
-			UA,
-		);
+		const url = `${REDDIT}/r/${subreddit}/comments/${id}/${title}/.json`;
+		logger.info(`fetching post from Reddit API ${url}`);
+		const response = await fetch(url, UA);
 
 		// Check if response is OK before proceeding
 		if (!response.ok) {
@@ -88,7 +87,10 @@ class Reddit {
 					title,
 					statusCode: response.status,
 					statusText: response.statusText,
-					parseError: parseError instanceof Error ? parseError.message : String(parseError),
+					parseError:
+						parseError instanceof Error
+							? parseError.message
+							: String(parseError),
 				},
 				"JSON parsing error",
 			);
@@ -110,11 +112,14 @@ async function main() {
 
 		logger.info({ hasResult: !!result }, "completed");
 	} catch (error) {
-		logger.error({ error: error instanceof Error ? error.stack : String(error) }, "Failed to execute main function");
+		logger.error(
+			{ error: error instanceof Error ? error.stack : String(error) },
+			"Failed to execute main function",
+		);
 		process.exit(1);
 	}
 }
 
 if (require.main === module) {
-    main();
+	main();
 }
