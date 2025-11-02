@@ -2,7 +2,5 @@
 	"extends": "@total-typescript/tsconfig/bundler/no-dom/app", // For an app
 	"compilerOptions": {
 		"experimentalDecorators": true,
-		"module": "es2020",
-		"moduleResolution": "node"
 	}
 }
