@@ -757,6 +757,242 @@ Before committing:
 
 ---
 
+## Media Handling Patterns
+
+### Overview
+
+The Reddit provider implements comprehensive media handling for all Reddit content types:
+- **Single Images**: Direct image posts
+- **Galleries**: Multiple images in a single post
+- **Videos**: Reddit-hosted videos (with DASH, HLS, and fallback URLs)
+- **Previews**: Multiple resolution versions of images
+- **Thumbnails**: Small preview images
+
+### Architecture Pattern: Two-Phase Media Processing
+
+**Phase 1: Memoized API Calls**
+```typescript
+// Each API call is memoized independently
+@memoize({ provider: 'reddit' })
+async getPost({ subreddit, id, title }: GetPostParams) { ... }
+
+@memoize({ provider: 'reddit' })
+async getMedia({ url }: GetMediaParams): Promise<Buffer> { ... }
+```
+
+**Phase 2: Extraction & Composition**
+```typescript
+// NOT memoized - parses cached data
+extractMedia(postData: any): ExtractedMedia { ... }
+
+// Composite operation - uses multiple memoized calls
+async fetchPostWithMedia(params: GetPostParams) { ... }
+```
+
+### Media Types Handled
+
+#### 1. Single Images
+```typescript
+// Reddit post with post_hint: "image"
+const post = await reddit.getPost({ subreddit, id, title });
+const media = reddit.extractMedia(post);
+
+// media.mainMedia contains the primary image URL
+for (const item of media.mainMedia) {
+	const buffer = await reddit.getMedia({ url: item.url });
+	// Save or process buffer
+}
+```
+
+#### 2. Gallery Posts
+```typescript
+// Reddit post with is_gallery: true
+const post = await reddit.getPost({ subreddit, id, title });
+const media = reddit.extractMedia(post);
+
+// media.galleryItems contains all gallery images
+for (const item of media.galleryItems) {
+	console.log(`Gallery item ${item.mediaId}: ${item.width}x${item.height}`);
+	const buffer = await reddit.getMedia({ url: item.url });
+}
+```
+
+#### 3. Reddit-Hosted Videos
+```typescript
+// Reddit post with is_video: true
+const post = await reddit.getPost({ subreddit, id, title });
+const media = reddit.extractMedia(post);
+
+// media.videoData contains fallback, DASH, and HLS URLs
+for (const video of media.videoData) {
+	console.log(`Video: ${video.url} (${video.width}x${video.height})`);
+	const buffer = await reddit.getMedia({ url: video.url });
+}
+```
+
+#### 4. Preview Images (Multiple Resolutions)
+```typescript
+// Every post may have preview images in different resolutions
+const post = await reddit.getPost({ subreddit, id, title });
+const media = reddit.extractMedia(post);
+
+// media.previews contains source + all resolutions
+for (const preview of media.previews) {
+	console.log(`Preview: ${preview.width}x${preview.height} - ${preview.url}`);
+}
+```
+
+### Complete Example: Fetch Post with All Media
+
+```typescript
+import { Reddit } from './reddit';
+
+const reddit = new Reddit();
+
+// Composite operation that:
+// 1. Fetches post (memoized)
+// 2. Extracts all media URLs
+// 3. Downloads each media item (each download memoized)
+const result = await reddit.fetchPostWithMedia({
+	subreddit: 'pics',
+	id: '1abc123',
+	title: 'amazing_photo',
+});
+
+console.log(`Post fetched: ${!!result.post}`);
+console.log(`Media items found: ${result.media.mainMedia.length + result.media.galleryItems.length}`);
+console.log(`Successfully downloaded: ${result.downloadedMedia.size}`);
+
+// Access downloaded media
+for (const [url, buffer] of result.downloadedMedia) {
+	console.log(`${url}: ${buffer.length} bytes`);
+}
+```
+
+### Extraction Utility Reference
+
+The `extractMedia()` method returns:
+
+```typescript
+interface ExtractedMedia {
+	mainMedia: MediaItem[];      // Primary images/videos from post.url
+	previews: MediaItem[];       // All preview resolutions from post.preview
+	thumbnails: MediaItem[];     // Thumbnail from post.thumbnail
+	galleryItems: MediaItem[];   // All gallery images from post.media_metadata
+	videoData: MediaItem[];      // Video URLs (fallback, DASH, HLS)
+}
+
+interface MediaItem {
+	url: string;                 // Direct URL to media
+	type: "image" | "video" | "gallery_image" | "preview" | "thumbnail";
+	width?: number;              // Dimensions if available
+	height?: number;
+	caption?: string;            // Future: gallery captions
+	mediaId?: string;            // Gallery item ID
+}
+```
+
+### Additional Provider Methods
+
+#### Fetch Subreddit Listing
+```typescript
+// Get hot posts from a subreddit
+const listing = await reddit.getSubreddit({
+	name: 'pics',
+	sort: 'hot',      // 'hot' | 'new' | 'top' | 'rising'
+	limit: 25,        // Number of posts
+	after: 't3_xyz',  // Pagination cursor (optional)
+});
+
+// Iterate through posts
+const posts = listing.data.children;
+for (const postWrapper of posts) {
+	const post = postWrapper.data;
+	console.log(`${post.title} - ${post.url}`);
+}
+```
+
+#### Fetch User Profile
+```typescript
+// Get user's recent posts
+const userData = await reddit.getUser({
+	username: 'example_user',
+	sort: 'new',      // 'new' | 'hot' | 'top' | 'controversial'
+	limit: 25,
+});
+
+const userPosts = userData.data.children;
+for (const post of userPosts) {
+	console.log(`${post.data.title} in r/${post.data.subreddit}`);
+}
+```
+
+### Design Principles
+
+1. **Granular Memoization**: Each API call is memoized separately
+   - `getPost()` - Memoized by post ID
+   - `getMedia()` - Memoized by URL
+   - `getSubreddit()` - Memoized by subreddit + params
+   - `getUser()` - Memoized by username + params
+
+2. **Extraction Not Memoized**: Parsing logic runs on cached data
+   - No API calls, so no need for memoization
+   - Fast operation on local JSON
+   - Can be updated without invalidating cache
+
+3. **Composition Over Complexity**: Complex operations compose simple ones
+   - `fetchPostWithMedia()` uses `getPost()` + `getMedia()`
+   - Each piece is independently cached
+   - Flexible - can mix and match as needed
+
+4. **Graceful Degradation**: Errors don't block entire operation
+   - If one media item fails, others continue
+   - Logging for debugging
+   - Returns partial results
+
+### Pattern for New Providers
+
+When implementing a new provider (Twitter, Instagram, etc.):
+
+```typescript
+class MyProvider {
+	// 1. Memoize individual API calls
+	@memoize({ provider: 'myprovider' })
+	async getContent({ id }: { id: string }) {
+		const response = await fetch(url);
+		return response.json();
+	}
+
+	@memoize({ provider: 'myprovider' })
+	async getMedia({ url }: { url: string }): Promise<Buffer> {
+		const response = await fetch(url);
+		return Buffer.from(await response.arrayBuffer());
+	}
+
+	// 2. Extraction utilities (not memoized)
+	extractMedia(data: any): ExtractedMedia {
+		// Parse JSON to find media URLs
+		// Return structured media information
+	}
+
+	// 3. Composite operations (uses memoized methods)
+	async fetchContentWithMedia({ id }: { id: string }) {
+		const content = await this.getContent({ id });
+		const media = this.extractMedia(content);
+
+		const downloadedMedia = new Map();
+		for (const item of media.allItems) {
+			const buffer = await this.getMedia({ url: item.url });
+			downloadedMedia.set(item.url, buffer);
+		}
+
+		return { content, media, downloadedMedia };
+	}
+}
+```
+
+---
+
 ## Common Tasks
 
 ### Task: Add Error Handling to a Function
