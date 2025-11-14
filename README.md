@@ -1,27 +1,9 @@
 # evening
 
-Pretty basic OSINT/data gathering userscript.
+- This crawler/scraper should start scraping from one place, look at the site from an AI and structure perspective, and extract the data as JSON.
+- If there are any links in the page, we should follow them, but we should ask the user first.
+- If there are any images etc. we should write code using AI to generate the code to fetch them.
 
-[![Build and Release Evening](https://github.com/umstek/evening/actions/workflows/main.yml/badge.svg)](https://github.com/umstek/evening/actions/workflows/main.yml)
-
-Currently only supports collecting twitter UserCell data, as you manually scroll
-through twitter
-
-- Followers
-- Following
-- Retweeters (For reposts excluding quote reposts)
-- Likers (only your tweets)
-
-They will be saved in indexed db automatically, and you can download all data as
-a json when you press the download button in the upper right corner.
-
-## Development
-
-1. Have a web browser that is compatible with tampermonkey etc. Google Chrome will do.
-2. Install tampermonkey and Disable-CSP extensions.
-3. Turn off CSP using the extension. This takes some time to take effect; not sure why.
-4. Clone this repository.
-5. Run `bun i` (or use a package manager of your choice).
-6. Run `bun dev`.
-7. Go to the URL printed in the terminal.
-8. Open twitter if it didn't open already.
+- I want this to automatically discover data types of extracted jsons and generate typescript types with quicktype.
+- Then we use AI to analyze the types and rename them.
+- Then we can use that + sample data to generate a zod or arctype schema.
