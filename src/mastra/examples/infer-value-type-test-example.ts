@@ -1,8 +1,14 @@
 import { RuntimeContext } from "@mastra/core/runtime-context";
 import { inferValueTypeTool } from "../tools/infer-value-type";
 
-async function testInferValueType() {
-	console.log("Testing value type inference...\n");
+/**
+ * Example: Demonstrates the value type inference tool
+ *
+ * This is a demonstration script, not a unit test.
+ * Run with: bun run src/mastra/examples/infer-value-type-test-example.ts
+ */
+async function demonstrateInferValueType() {
+	console.log("Demonstrating value type inference...\n");
 
 	const tests = [
 		{
@@ -53,4 +59,9 @@ async function testInferValueType() {
 	}
 }
 
-testInferValueType();
+// Only run if executed directly (not imported)
+if (import.meta.main) {
+	demonstrateInferValueType().catch(console.error);
+}
+
+export { demonstrateInferValueType };
