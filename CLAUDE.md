@@ -104,17 +104,6 @@ See `docs/architecture.md` for full rationale.
 - **Why function-level memoization?** Natural granularity, composable, automatic
 - **Why yt-dlp?** Reddit separates audio/video streams, yt-dlp merges them
 
-## Next Steps (Crawler Vision)
-
-Current state: Rigid media methods (getImage, getVideo, getGallery)
-Future state: Dynamic JSON analysis and intelligent crawling
-
-1. Use `quicktype-core` (already a dependency!) to analyze JSON structures
-2. Automatically identify URL fields and media types
-3. Determine safe download targets (same-site, known media hosts)
-4. Integrate AI agents for crawling decisions
-5. Build on existing media methods as building blocks
-
 ## Notes
 - Data directory created automatically on init
 - All media is deduplicated via content-addressed storage

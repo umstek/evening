@@ -345,6 +345,187 @@ async getComments({ postId, cursor = null }) {
 - [x] Error handling and logging
 - [ ] Tests
 
+## Crawler Roadmap
+
+The current implementation provides building blocks (media methods), but the vision is an intelligent crawler that dynamically analyzes JSON and makes scraping decisions.
+
+### Phase 1: Dynamic Type Discovery
+
+**Goal**: Automatically analyze fetched JSON structures and generate TypeScript types.
+
+**Implementation**:
+1. Use `quicktype-core` (already a dependency) to analyze JSON responses
+2. Generate TypeScript interfaces from fetched data
+3. Store type definitions alongside content for analysis
+4. Build a type registry to track discovered structures
+
+**Technical approach**:
+```typescript
+import { quicktype, InputData, JSONSchemaInput } from "quicktype-core";
+
+async function analyzeJSON(json: unknown) {
+  const jsonInput = new JSONSchemaInput(new FetchingJSONSchemaStore());
+  await jsonInput.addSource({ name: "RedditPost", samples: [JSON.stringify(json)] });
+
+  const inputData = new InputData();
+  inputData.addInput(jsonInput);
+
+  const result = await quicktype({
+    inputData,
+    lang: "typescript",
+    rendererOptions: { "just-types": "true" }
+  });
+
+  return result.lines.join("\n");
+}
+```
+
+### Phase 2: URL and Media Identification
+
+**Goal**: Automatically identify URLs, media types, and downloadable content in JSON.
+
+**Implementation**:
+1. Traverse JSON objects recursively to find URL patterns
+2. Classify URLs by type:
+   - Same-site links (safe to follow)
+   - External links (require policy decision)
+   - Media URLs (images, videos, audio)
+   - API endpoints
+3. Detect media types using:
+   - File extensions (.jpg, .mp4, .gif)
+   - URL patterns (i.redd.it, v.redd.it, imgur.com)
+   - Content-Type headers (when available)
+4. Build a URL classification system
+
+**Technical approach**:
+```typescript
+interface URLClassification {
+  url: string;
+  type: 'same-site' | 'external' | 'media' | 'api';
+  mediaType?: 'image' | 'video' | 'audio';
+  safe: boolean;
+}
+
+function classifyURLs(json: unknown, baseURL: string): URLClassification[] {
+  // Recursively traverse JSON
+  // Identify URL strings using regex
+  // Classify based on domain, extension, patterns
+  // Return structured classification
+}
+```
+
+### Phase 3: Safe Download Determination
+
+**Goal**: Determine which content is safe to download automatically.
+
+**Implementation**:
+1. Define download policies:
+   - Same-site: Always safe
+   - Known media hosts: Safe (imgur, gfycat, i.redd.it, v.redd.it)
+   - External: Require approval or policy check
+2. Implement size limits and rate limiting
+3. Respect robots.txt and rate limits
+4. Handle authentication requirements
+
+**Policy engine**:
+```typescript
+interface DownloadPolicy {
+  maxSizeBytes: number;
+  allowedDomains: string[];
+  blockedDomains: string[];
+  requiresApproval: (url: string) => boolean;
+}
+
+async function shouldDownload(url: string, policy: DownloadPolicy): Promise<boolean> {
+  // Check domain against allowed/blocked lists
+  // Check estimated size (HEAD request)
+  // Apply policy rules
+  // Return decision
+}
+```
+
+### Phase 4: AI Agent Integration
+
+**Goal**: Use AI to make intelligent crawling decisions.
+
+**Implementation**:
+1. Integrate AI agent for decision-making:
+   - Which links to follow
+   - What media to download
+   - How deep to crawl
+   - When to stop
+2. Provide context to AI:
+   - Current JSON structure
+   - Discovered URLs
+   - Downloaded content summary
+   - User goals/constraints
+3. Execute AI decisions using existing building blocks
+
+**Agent interface**:
+```typescript
+interface CrawlDecision {
+  followLinks: string[];
+  downloadMedia: string[];
+  skipURLs: string[];
+  reasoning: string;
+}
+
+async function getAICrawlDecision(
+  post: unknown,
+  context: CrawlContext
+): Promise<CrawlDecision> {
+  // Send JSON + context to AI
+  // Get structured decision
+  // Validate and execute using building blocks
+}
+```
+
+### Phase 5: Building on Existing Methods
+
+**Current building blocks**:
+- `getPost()`: Fetch and cache JSON
+- `getMedia()`: Download binary content
+- `getVideoWithYtDlp()`: Download videos with audio
+- `getImage()`, `getVideo()`, `getGallery()`: Extract known media types
+
+**Integration**:
+1. AI identifies media URLs in JSON
+2. Classifier determines media type (image/video/gallery)
+3. Appropriate building block method is called
+4. All content is automatically cached and deduplicated
+
+**Example flow**:
+```typescript
+// 1. Fetch post (cached)
+const post = await reddit.getPost(params);
+
+// 2. Analyze structure (quicktype)
+const types = await analyzeJSON(post);
+
+// 3. Identify URLs
+const urls = classifyURLs(post, baseURL);
+
+// 4. Get AI decision
+const decision = await getAICrawlDecision(post, { urls, types });
+
+// 5. Execute using building blocks
+for (const url of decision.downloadMedia) {
+  if (isImage(url)) {
+    await reddit.getMedia({ url });
+  } else if (isVideo(url)) {
+    await reddit.getVideoWithYtDlp({ url });
+  }
+}
+```
+
+### Implementation Priority
+
+1. **Phase 1**: Type discovery (foundation for understanding data)
+2. **Phase 2**: URL identification (enables content discovery)
+3. **Phase 3**: Download policies (safety and control)
+4. **Phase 4**: AI integration (intelligent decisions)
+5. **Phase 5**: Orchestration (tie it all together)
+
 ## Design Decisions
 
 ### Why content-addressed storage?
