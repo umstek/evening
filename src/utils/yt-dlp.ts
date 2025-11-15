@@ -24,10 +24,13 @@ function getYtDlpBinaryName(): string {
 	}
 
 	if (platform === "linux") {
+		if (arch === "x64") {
+			return "yt-dlp_linux";
+		}
 		if (arch === "arm64" || arch === "aarch64") {
 			return "yt-dlp_linux_aarch64";
 		}
-		return "yt-dlp_linux";
+		throw new Error(`Unsupported Linux architecture: ${arch}`);
 	}
 
 	throw new Error(`Unsupported platform: ${platform} ${arch}`);
@@ -88,6 +91,7 @@ export async function downloadVideoWithYtDlp(url: string): Promise<Buffer> {
 
 	return new Promise((resolve, reject) => {
 		const chunks: Buffer[] = [];
+		let timeoutId: NodeJS.Timeout;
 
 		// Run yt-dlp to download video to stdout
 		const process = spawn(ytDlpPath, [
@@ -100,6 +104,12 @@ export async function downloadVideoWithYtDlp(url: string): Promise<Buffer> {
 			"--no-warnings",
 		]);
 
+		// Set timeout (e.g., 5 minutes)
+		timeoutId = setTimeout(() => {
+			process.kill();
+			reject(new Error("yt-dlp download timed out"));
+		}, 5 * 60 * 1000);
+
 		process.stdout.on("data", (chunk: Buffer) => {
 			chunks.push(chunk);
 		});
@@ -109,11 +119,13 @@ export async function downloadVideoWithYtDlp(url: string): Promise<Buffer> {
 		});
 
 		process.on("error", (error) => {
+			clearTimeout(timeoutId);
 			logger.error({ error: error.message }, "yt-dlp process error");
 			reject(error);
 		});
 
 		process.on("close", (code) => {
+			clearTimeout(timeoutId);
 			if (code !== 0) {
 				logger.error({ exitCode: code }, "yt-dlp exited with error");
 				reject(new Error(`yt-dlp exited with code ${code}`));
