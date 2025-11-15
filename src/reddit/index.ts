@@ -160,17 +160,15 @@ class Reddit {
 	/**
 	 * Fetches video using yt-dlp (handles audio+video merging for Reddit)
 	 * @param url - Video URL (Reddit post URL or direct video URL)
-	 * @returns ArrayBuffer containing the video content
+	 * @returns Buffer containing the video content (memoize layer handles serialization)
 	 */
 	@memoize({ provider: "reddit" })
-	async getVideoWithYtDlp({ url }: GetMediaParams): Promise<ArrayBuffer> {
+	async getVideoWithYtDlp({ url }: GetMediaParams): Promise<Buffer> {
 		logger.info(`fetching video with yt-dlp from ${url}`);
 		const buffer = await downloadVideoWithYtDlp(url);
 		logger.info({ url, sizeBytes: buffer.length }, "fetched video with yt-dlp");
-		return buffer.buffer.slice(
-			buffer.byteOffset,
-			buffer.byteOffset + buffer.byteLength,
-		);
+		// Return Buffer directly to avoid copying; memoize decorator handles serialization
+		return buffer;
 	}
 
 	/**
@@ -226,7 +224,7 @@ class Reddit {
 	 */
 	async getVideo(params: GetPostParams): Promise<{
 		metadata: VideoMetadata;
-		content: ArrayBuffer;
+		content: ArrayBuffer | Buffer;
 	}> {
 		const post = await this.getPost(params);
 		const postData = post?.[0]?.data?.children?.[0]?.data;
@@ -248,9 +246,10 @@ class Reddit {
 		// yt-dlp can merge audio+video streams that Reddit separates
 		const postUrl = `${REDDIT}/r/${params.subreddit}/comments/${params.id}/${params.title}/`;
 
-		let content: ArrayBuffer;
+		let content: ArrayBuffer | Buffer;
 		try {
 			// Try yt-dlp first (best quality with audio+video merged)
+			// Returns Buffer from cache or yt-dlp
 			content = await this.getVideoWithYtDlp({ url: postUrl });
 		} catch (ytDlpError) {
 			// Fall back to direct download (video only, no audio)
@@ -310,37 +309,37 @@ class Reddit {
 			throw new Error("No media metadata found in gallery post");
 		}
 
-		const galleryItems: Array<{
-			metadata: GalleryItem;
-			content: ArrayBuffer;
-		}> = [];
+		// Extract all valid image URLs first
+		const imagePromises = Object.entries(mediaMetadata)
+			.map(([id, item]) => {
+				const itemData = item as {
+					s?: { u?: string; x?: number; y?: number };
+				};
+				if (!itemData.s?.u) return null;
 
-		// Process each gallery item
-		for (const [id, item] of Object.entries(mediaMetadata)) {
-			const itemData = item as {
-				s?: { u?: string; x?: number; y?: number };
-			};
-			if (itemData.s?.u) {
 				const imageUrl = this.decodeRedditUrl(itemData.s.u);
-				const content = await this.getMedia({ url: imageUrl });
+				return {
+					id,
+					url: imageUrl,
+					width: itemData.s.x,
+					height: itemData.s.y,
+				};
+			})
+			.filter((item): item is NonNullable<typeof item> => item !== null);
 
-				galleryItems.push({
-					metadata: {
-						id,
-						url: imageUrl,
-						width: itemData.s.x,
-						height: itemData.s.y,
-					},
-					content,
-				});
-			}
-		}
-
-		if (galleryItems.length === 0) {
+		if (imagePromises.length === 0) {
 			throw new Error("No valid images found in gallery");
 		}
 
-		return galleryItems;
+		// Download all images in parallel for better throughput
+		const results = await Promise.all(
+			imagePromises.map(async (meta) => ({
+				metadata: meta,
+				content: await this.getMedia({ url: meta.url }),
+			})),
+		);
+
+		return results;
 	}
 }
 

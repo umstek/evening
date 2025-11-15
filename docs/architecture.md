@@ -423,7 +423,7 @@ function classifyURLs(json: unknown, baseURL: string): URLClassification[] {
    - Same-site: Always safe
    - Known media hosts: Safe (imgur, gfycat, i.redd.it, v.redd.it)
    - External: Require approval or policy check
-2. Implement size limits and rate limiting
+2. Implement size limits and rate-limiting
 3. Respect robots.txt and rate limits
 4. Handle authentication requirements
 
