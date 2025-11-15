@@ -19,13 +19,26 @@ src/mastra/
 
 ## Getting Started
 
-### 1. Install Dependencies
+### 1. Core Dependencies (Already Installed)
 
-Dependencies are already installed:
 - `@mastra/core` - Core Mastra framework
 - `zod` - Schema validation
 
-### 2. Configure Environment
+### 2. Optional: Install AI Provider SDKs
+
+To use agents with AI models, install provider packages:
+
+```bash
+# For Google Gemini
+bun add @ai-sdk/google
+
+# For OpenAI-compatible APIs (Cerebras, Zhipu AI, etc.)
+bun add @ai-sdk/openai
+```
+
+See `src/mastra/models.ts` for configuration examples.
+
+### 3. Configure Environment
 
 Copy `.env.example` to `.env` and add your AI provider API key:
 
@@ -33,9 +46,20 @@ Copy `.env.example` to `.env` and add your AI provider API key:
 cp .env.example .env
 ```
 
-Then edit `.env` and add your key (e.g., OpenAI, Anthropic, Google Gemini).
+Available keys (you only need one):
+- `GOOGLE_GENERATIVE_AI_API_KEY` - Google Gemini (free tier available)
+- `CEREBRAS_API_KEY` - Cerebras (free tier available)
+- `ZHIPU_AI_API_KEY` - Zhipu AI / ZAI GLM Coding Plan
 
-### 3. Run Mastra Studio
+### 4. Try the Examples
+
+Run the Reddit schema generation example:
+
+```bash
+bun run src/mastra/examples/reddit-schema-example.ts
+```
+
+### 5. (Optional) Run Mastra Studio
 
 Start the development studio to interact with tools and agents:
 
@@ -96,6 +120,24 @@ console.log(result.zodSchema);
 ```bash
 bun run src/mastra/tools/typescript-to-zod.test.ts
 ```
+
+## Examples
+
+### Reddit Schema Generation
+
+See `src/mastra/examples/reddit-schema-example.ts` for a practical example that generates Zod schemas for Reddit post and comment data. This demonstrates how to use the TypeScript-to-Zod tool with real-world data structures.
+
+Run it:
+```bash
+bun run src/mastra/examples/reddit-schema-example.ts
+```
+
+This example shows:
+- Generating schemas for complex interfaces
+- Automatic URL detection in fields like `url`, `thumbnail`, `permalink`
+- Integer detection for scores, counts, timestamps
+- Handling optional fields
+- Creating validation for scraped data
 
 ## Next Steps
 
