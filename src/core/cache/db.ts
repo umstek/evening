@@ -1,8 +1,8 @@
-import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const calls = sqliteTable(
 	"calls",

@@ -1,8 +1,8 @@
-import { mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { db, content as contentTable } from "./db";
+import { mkdir } from "node:fs/promises";
 import { eq, sql } from "drizzle-orm";
 import defaultLogger from "../../logger";
+import { content as contentTable, db } from "./db";
 
 const logger = defaultLogger.child({ module: "storage" });
 

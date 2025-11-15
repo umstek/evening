@@ -1,4 +1,4 @@
-import { db, calls as callsTable, content as contentTable } from "./db";
+import { calls as callsTable, content as contentTable, db } from "./db";
 
 async function inspect() {
 	console.log("\n=== Calls ===");

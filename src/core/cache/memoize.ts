@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { db, calls as callsTable } from "./db";
-import { saveContent, loadContent } from "./storage";
 import { eq, sql } from "drizzle-orm";
 import defaultLogger from "../../logger";
+import { calls as callsTable, db } from "./db";
+import { loadContent, saveContent } from "./storage";
 
 const logger = defaultLogger.child({ module: "memoize" });
 
@@ -46,11 +46,11 @@ function serializeData(data: unknown): Buffer | string {
 }
 
 export function memoize(options: MemoizeOptions = {}) {
-	return function (
+	return (
 		_target: unknown,
 		propertyKey: string,
 		descriptor: PropertyDescriptor,
-	) {
+	) => {
 		const originalMethod = descriptor.value;
 		const functionName = `${options.provider || "unknown"}.${propertyKey}`;
 
