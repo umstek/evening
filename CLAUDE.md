@@ -156,6 +156,29 @@ Registry of all scraped content files.
 - **Error handling**: Comprehensive with structured logging
 - **Comments**: JSDoc for public methods
 
+### Choosing Solutions: Priority Order
+
+When solving a problem, follow this priority order:
+
+1. **Cross-compatible JavaScript** - If simple enough, use plain JS that works in browser/Node
+2. **Built-in Node.js APIs** - Prefer Node.js standard library over external packages
+3. **Bun-native APIs** - Use Bun-specific features when they provide clear benefits
+4. **External library or adapted code** - Only if above options don't work
+   - Document the source if adapting code from repos/Stack Overflow
+5. **Write custom code** - Last resort for complex requirements
+
+**Above all else:**
+- Keep it **simple** and **maintainable**
+- Follow **KISS** (Keep It Simple, Stupid)
+- Follow **YAGNI** (You Aren't Gonna Need It)
+- Follow **POLA** (Principle of Least Astonishment)
+
+**Example:** MIME type mapping in `src/core/cache/storage.ts`
+- Uses a simple map instead of `mime-types` library
+- Only includes MIME types we actually use (YAGNI)
+- No external dependencies
+- Fast O(1) lookup, easy to extend
+
 ### Adding New Methods
 
 1. Decorate with `@memoize({ provider: "name" })` for caching

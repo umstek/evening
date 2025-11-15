@@ -17,6 +17,15 @@ export function hashContent(content: Buffer | string): string {
 	return createHash("sha256").update(buffer).digest("hex");
 }
 
+/**
+ * Maps MIME types to file extensions
+ *
+ * We use a simple map instead of a library (like 'mime-types') because:
+ * - Only includes MIME types we actually use (YAGNI)
+ * - No external dependencies
+ * - Fast O(1) lookup
+ * - Easy to extend when needed
+ */
 export function getExtensionFromMimeType(mimeType: string): string {
 	const mimeMap: Record<string, string> = {
 		"application/json": "json",
