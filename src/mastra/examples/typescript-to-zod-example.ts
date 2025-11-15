@@ -1,5 +1,5 @@
 import { RuntimeContext } from "@mastra/core/runtime-context";
-import { typescriptToZodTool } from "./typescript-to-zod";
+import { typescriptToZodTool } from "../tools/typescript-to-zod";
 
 /**
  * Test the TypeScript to Zod schema generator tool

@@ -96,10 +96,10 @@ console.log(result.confidence);   // "medium"
 // → These are URLs! Download and check MIME type
 ```
 
-**Test it:**
+**Examples:**
 
 ```bash
-bun run src/mastra/tools/infer-value-type.test.ts
+bun run src/mastra/examples/infer-value-type-test-example.ts
 bun run src/mastra/examples/infer-value-type-example.ts
 ```
 

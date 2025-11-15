@@ -223,8 +223,8 @@ export const typescriptToZodTool = createTool({
 		const { interfaceString, sampleData } = context;
 
 		try {
-			const result = generateZodSchema(interfaceString, sampleData);
 			const { name } = parseTypeScriptInterface(interfaceString);
+			const result = generateZodSchema(interfaceString, sampleData);
 
 			return {
 				zodSchema: result.zodSchema,

@@ -1,5 +1,5 @@
 import { RuntimeContext } from "@mastra/core/runtime-context";
-import { inferValueTypeTool } from "./infer-value-type";
+import { inferValueTypeTool } from "../tools/infer-value-type";
 
 async function testInferValueType() {
 	console.log("Testing value type inference...\n");

@@ -33,6 +33,7 @@ interface RedditPost {
   `.trim();
 
 	// Multiple samples for better type inference
+	// Include negative scores to reflect real Reddit data (downvoted posts)
 	const postSamples = [
 		{
 			id: "abc123",
@@ -63,6 +64,19 @@ interface RedditPost {
 			is_video: true,
 			is_self: false,
 			thumbnail: "https://i.redd.it/thumb2.jpg",
+		},
+		{
+			id: "ghi789",
+			title: "Controversial post",
+			author: "test_user",
+			subreddit: "unpopularopinion",
+			url: "https://reddit.com/r/unpopularopinion/comments/ghi789",
+			permalink: "/r/unpopularopinion/comments/ghi789/controversial_post",
+			score: -15,
+			num_comments: 0,
+			created_utc: 1699737600,
+			is_video: false,
+			is_self: true,
 		},
 	];
 
@@ -96,6 +110,7 @@ interface RedditComment {
   `.trim();
 
 	// Multiple comment samples
+	// Include negative scores for downvoted comments
 	const commentSamples = [
 		{
 			id: "def456",
@@ -121,6 +136,18 @@ interface RedditComment {
 			depth: 2,
 			is_submitter: false,
 			edited: 1699565200,
+		},
+		{
+			id: "jkl012",
+			author: "troll_user",
+			body: "This is terrible",
+			score: -8,
+			created_utc: 1699565300,
+			parent_id: "t3_abc123",
+			permalink:
+				"/r/programming/comments/abc123/interesting_programming_article/jkl012",
+			depth: 1,
+			is_submitter: false,
 		},
 	];
 
