@@ -133,15 +133,32 @@ Each content source (Reddit, Twitter, etc.) is a provider with memoized methods.
 
 ```typescript
 // src/reddit/index.ts
-export class RedditProvider {
+export class Reddit {
   @memoize({ provider: 'reddit' })
-  async getPost(params: GetPostParams) { ... }
+  async getPost(params: GetPostParams) {
+    // Fetches post JSON from Reddit API
+  }
 
   @memoize({ provider: 'reddit' })
-  async getComments(params: GetCommentsParams) { ... }
+  async getMedia({ url }: GetMediaParams) {
+    // Fetches binary media content (images, videos)
+    // Returns ArrayBuffer
+  }
 
-  @memoize({ provider: 'reddit' })
-  async getMedia(url: string) { ... }
+  async getImage(params: GetPostParams) {
+    // Extracts image URL from post and fetches it
+    // Returns { metadata, content: ArrayBuffer }
+  }
+
+  async getVideo(params: GetPostParams) {
+    // Extracts video URL from post and fetches it
+    // Returns { metadata, content: ArrayBuffer }
+  }
+
+  async getGallery(params: GetPostParams) {
+    // Extracts all images from gallery post and fetches them
+    // Returns Array<{ metadata, content: ArrayBuffer }>
+  }
 }
 ```
 
@@ -151,6 +168,74 @@ export class RedditProvider {
 - Methods are small, focused, and memoizable
 - Complex operations (e.g., "get post + all comments + all images") compose multiple memoized calls
 - No separate "session" or "scrape" tracking - just cached function calls
+
+### Media Methods
+
+The Reddit provider implements specialized methods for different media types:
+
+#### `getMedia({ url })`
+
+Low-level method that fetches binary content from any URL. Decorated with `@memoize` to cache downloaded media by URL.
+
+```typescript
+const content = await reddit.getMedia({ url: 'https://i.redd.it/...' });
+// Returns: ArrayBuffer
+```
+
+#### `getImage(params)`
+
+Extracts and downloads a single image from a Reddit post. Handles two cases:
+
+1. **Preview images**: Uses `post.preview.images[0].source.url` for high-quality versions
+2. **Direct links**: Falls back to `post.url` if it's a direct image link
+
+```typescript
+const { metadata, content } = await reddit.getImage({
+  subreddit: 'pics',
+  id: '1abc123',
+  title: 'beautiful_sunset',
+});
+// metadata: { url, width?, height?, type: 'image' }
+// content: ArrayBuffer
+```
+
+#### `getVideo(params)`
+
+Extracts and downloads a video from a Reddit post. Uses `post.media.reddit_video.fallback_url` for the video file.
+
+```typescript
+const { metadata, content } = await reddit.getVideo({
+  subreddit: 'videos',
+  id: '1xyz789',
+  title: 'amazing_video',
+});
+// metadata: { url, fallbackUrl?, hlsUrl?, dashUrl?, width?, height?, duration? }
+// content: ArrayBuffer
+```
+
+#### `getGallery(params)`
+
+Extracts and downloads all images from a Reddit gallery post. Processes `post.media_metadata` to find all gallery items.
+
+**Important**: Reddit gallery URLs contain `amp;` encoding that must be removed for valid URLs.
+
+```typescript
+const items = await reddit.getGallery({
+  subreddit: 'pics',
+  id: '1def456',
+  title: 'photo_collection',
+});
+// Returns: Array<{ metadata: GalleryItem, content: ArrayBuffer }>
+// Each item has: { id, url, width?, height? }
+```
+
+**Key Features:**
+
+- All media methods compose `getPost` + `getMedia` calls
+- Both calls are independently memoized (deduplication)
+- Same image from different posts = single cached file
+- Metadata extraction happens in the method, not cached
+- Binary content cached via `getMedia`
 
 ## Export & Traversal
 
@@ -211,15 +296,16 @@ async getComments({ postId, cursor = null }) {
 
 ## Implementation Checklist
 
-- [ ] Set up Drizzle ORM with bun:sqlite
-- [ ] Create database schema (`calls`, `content`)
-- [ ] Implement content storage (hash, save to `scraped/`)
-- [ ] Implement memoize decorator
-- [ ] Migrate Reddit provider to use memoization
+- [x] Set up Drizzle ORM with bun:sqlite
+- [x] Create database schema (`calls`, `content`)
+- [x] Implement content storage (hash, save to `scraped/`)
+- [x] Implement memoize decorator
+- [x] Migrate Reddit provider to use memoization
+- [x] Implement media methods (getImage, getVideo, getGallery)
 - [ ] Add cache invalidation options
-- [ ] Implement reference counting
+- [x] Implement reference counting
 - [ ] Add export/traversal utilities
-- [ ] Error handling and logging
+- [x] Error handling and logging
 - [ ] Tests
 
 ## Design Decisions

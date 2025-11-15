@@ -9,7 +9,35 @@ interface GetPostParams {
 	title: string;
 }
 
-const REDDIT = "https://www.reddit.com/";
+interface GetMediaParams {
+	url: string;
+}
+
+interface MediaMetadata {
+	url: string;
+	width?: number;
+	height?: number;
+	type?: string;
+}
+
+interface GalleryItem {
+	id: string;
+	url: string;
+	width?: number;
+	height?: number;
+}
+
+interface VideoMetadata {
+	url: string;
+	fallbackUrl?: string;
+	hlsUrl?: string;
+	dashUrl?: string;
+	width?: number;
+	height?: number;
+	duration?: number;
+}
+
+const REDDIT = "https://old.reddit.com";
 
 const UA = {
 	headers: {
@@ -45,7 +73,7 @@ class Reddit {
 			let bodyText = "";
 			try {
 				bodyText = await response.text();
-			} catch (e) {
+			} catch (_e) {
 				// If we can't get the body text, just continue without it
 			}
 
@@ -97,6 +125,183 @@ class Reddit {
 			throw new Error(errorMessage);
 		}
 	}
+
+	/**
+	 * Decodes Reddit's URL encoding by removing 'amp;' occurrences
+	 */
+	private decodeRedditUrl(url: string): string {
+		return url.replace(/amp;/g, "");
+	}
+
+	/**
+	 * Fetches binary media content from a URL
+	 * @param url - Direct URL to the media file
+	 * @returns ArrayBuffer containing the media content
+	 */
+	@memoize({ provider: "reddit" })
+	async getMedia({ url }: GetMediaParams): Promise<ArrayBuffer> {
+		logger.info(`fetching media from ${url}`);
+		const response = await fetch(url, UA);
+
+		if (!response.ok) {
+			const errorMessage = `Failed to fetch media: ${response.status} ${response.statusText}`;
+			logger.error(
+				{ url, statusCode: response.status, statusText: response.statusText },
+				"Failed to fetch media",
+			);
+			throw new Error(errorMessage);
+		}
+
+		logger.info({ url, statusCode: response.status }, "fetched media");
+		return await response.arrayBuffer();
+	}
+
+	/**
+	 * Extracts and fetches a single image from a Reddit post
+	 * Handles both direct image links and preview images
+	 * @param params - Post identification parameters
+	 * @returns Image metadata and binary content
+	 */
+	async getImage(params: GetPostParams): Promise<{
+		metadata: MediaMetadata;
+		content: ArrayBuffer;
+	}> {
+		const post = await this.getPost(params);
+		const postData = post?.[0]?.data?.children?.[0]?.data;
+
+		if (!postData) {
+			throw new Error("Invalid post structure");
+		}
+
+		let imageUrl: string | null = null;
+		let width: number | undefined;
+		let height: number | undefined;
+
+		// Try to get high-quality preview image first
+		if (postData.preview?.images?.[0]?.source) {
+			const source = postData.preview.images[0].source;
+			imageUrl = this.decodeRedditUrl(source.url);
+			width = source.width;
+			height = source.height;
+		}
+		// Fall back to direct URL
+		else if (postData.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(postData.url)) {
+			imageUrl = postData.url;
+		}
+
+		if (!imageUrl) {
+			throw new Error("No image found in post");
+		}
+
+		const content = await this.getMedia({ url: imageUrl });
+
+		return {
+			metadata: { url: imageUrl, width, height, type: "image" },
+			content,
+		};
+	}
+
+	/**
+	 * Extracts and fetches a video from a Reddit post
+	 * @param params - Post identification parameters
+	 * @returns Video metadata and binary content
+	 */
+	async getVideo(params: GetPostParams): Promise<{
+		metadata: VideoMetadata;
+		content: ArrayBuffer;
+	}> {
+		const post = await this.getPost(params);
+		const postData = post?.[0]?.data?.children?.[0]?.data;
+
+		if (!postData) {
+			throw new Error("Invalid post structure");
+		}
+
+		if (!postData.is_video) {
+			throw new Error("Post is not a video");
+		}
+
+		const redditVideo = postData.media?.reddit_video;
+		if (!redditVideo?.fallback_url) {
+			throw new Error("No video URL found in post");
+		}
+
+		const videoUrl = redditVideo.fallback_url;
+		const content = await this.getMedia({ url: videoUrl });
+
+		return {
+			metadata: {
+				url: videoUrl,
+				fallbackUrl: redditVideo.fallback_url,
+				hlsUrl: redditVideo.hls_url,
+				dashUrl: redditVideo.dash_url,
+				width: redditVideo.width,
+				height: redditVideo.height,
+				duration: redditVideo.duration,
+			},
+			content,
+		};
+	}
+
+	/**
+	 * Extracts and fetches all images from a Reddit gallery post
+	 * @param params - Post identification parameters
+	 * @returns Array of gallery items with metadata and content
+	 */
+	async getGallery(params: GetPostParams): Promise<
+		Array<{
+			metadata: GalleryItem;
+			content: ArrayBuffer;
+		}>
+	> {
+		const post = await this.getPost(params);
+		const postData = post?.[0]?.data?.children?.[0]?.data;
+
+		if (!postData) {
+			throw new Error("Invalid post structure");
+		}
+
+		if (!postData.is_gallery) {
+			throw new Error("Post is not a gallery");
+		}
+
+		const mediaMetadata = postData.media_metadata;
+		if (!mediaMetadata) {
+			throw new Error("No media metadata found in gallery post");
+		}
+
+		const galleryItems: Array<{
+			metadata: GalleryItem;
+			content: ArrayBuffer;
+		}> = [];
+
+		// Process each gallery item
+		for (const [id, item] of Object.entries(mediaMetadata)) {
+			const itemData = item as {
+				s?: { u?: string; x?: number; y?: number };
+			};
+			if (itemData.s?.u) {
+				const imageUrl = this.decodeRedditUrl(itemData.s.u);
+				const content = await this.getMedia({ url: imageUrl });
+
+				galleryItems.push({
+					metadata: {
+						id,
+						url: imageUrl,
+						width: itemData.s.x,
+						height: itemData.s.y,
+					},
+					content,
+				});
+			}
+		}
+
+		if (galleryItems.length === 0) {
+			throw new Error("No valid images found in gallery");
+		}
+
+		return galleryItems;
+	}
 }
 
 async function main() {
@@ -104,13 +309,16 @@ async function main() {
 		await initializeDatabase();
 
 		const reddit = new Reddit();
-		const result = await reddit.getPost({
+
+		// Example: Get an image post
+		const imagePost = await reddit.getImage({
 			subreddit: "interestingasfuck",
 			id: "1oftwfk",
 			title: "photographer_shows_his_pov_vs_the_photos_he_takes",
 		});
+		logger.info({ metadata: imagePost.metadata }, "fetched image");
 
-		logger.info({ hasResult: !!result }, "completed");
+		logger.info("completed");
 	} catch (error) {
 		logger.error(
 			{ error: error instanceof Error ? error.stack : String(error) },
@@ -123,3 +331,12 @@ async function main() {
 if (require.main === module) {
 	main();
 }
+
+export { Reddit };
+export type {
+	GetPostParams,
+	GetMediaParams,
+	MediaMetadata,
+	GalleryItem,
+	VideoMetadata,
+};
