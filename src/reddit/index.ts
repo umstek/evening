@@ -441,7 +441,12 @@ class Reddit {
 
 // ============================================================================
 // Main Function (for testing)
-// ============================================================================
+/**
+ * Runs example workflows that demonstrate the Reddit provider: fetching posts, extracting and downloading media, and listing subreddits.
+ *
+ * Initializes the database, creates a Reddit client, and sequentially exercises example operations:
+ * fetching a single post, extracting media from it, optionally downloading a media item, fetching a subreddit listing, and fetching a post together with all its media. On error the function logs the failure and terminates the process with exit code 1.
+ */
 
 async function main() {
 	try {
