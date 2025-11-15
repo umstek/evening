@@ -5,6 +5,7 @@ Evening is an intelligent web **crawler/scraper** with content-addressed storage
 ## Project Vision
 
 This is NOT just a media downloader. It's a dynamic crawler that:
+
 1. Fetches content (JSON, media) and caches automatically
 2. **Dynamically analyzes JSON** structures using quicktype
 3. **Identifies URLs and media** automatically
@@ -18,12 +19,14 @@ The Reddit provider's media methods (getImage, getVideo, getGallery) are **build
 See `README.md` for user-facing docs and getting started.
 
 ### Commands
+
 - `bun run dev` - Run scraper
 - `bun run lint:fix` - Fix linting (run before commits)
 - `bun run db:init` - Initialize database
 - `bun run db:inspect` - View cached content
 
 ### Key Files
+
 - `src/reddit/index.ts` - Reddit provider with media methods
 - `src/core/cache/` - Memoization and content-addressed storage
 - `src/utils/yt-dlp.ts` - Video download utility
@@ -39,12 +42,14 @@ See `README.md` for user-facing docs and getting started.
 ## Development Guidelines
 
 ### Code Style
+
 - Clean, readable, maintainable code (KISS, YAGNI, POLA)
 - TypeScript with full typing
 - Comprehensive error handling and logging
 - Always run `bun run lint:fix` before committing
 
 ### Solution Priority Order
+
 1. Cross-compatible JavaScript
 2. Built-in Node.js APIs
 3. Bun-native APIs
@@ -52,6 +57,7 @@ See `README.md` for user-facing docs and getting started.
 5. Custom code
 
 ### When to Use Libraries
+
 - **Complex domains**: Date/time, URL parsing, cryptography
 - **Security-critical**: Input validation, sanitization, crypto
 - **Battle-tested**: Thousands of users + tests catch edge cases
@@ -62,12 +68,14 @@ See `README.md` for user-facing docs and getting started.
 ## Database Schema
 
 ### `calls` Table
+
 - `args_hash` (PK): sha256(function_name + args_json)
 - `function_name`: e.g., 'reddit.getPost'
 - `content_hash` (FK): References content.hash
 - `created_at`, `last_accessed`, `fetch_duration_ms`
 
 ### `content` Table
+
 - `hash` (PK): sha256 of file content
 - `file_path`: scraped/{hash}.{ext}
 - `mime_type`, `size_bytes`, `reference_count`
@@ -105,6 +113,7 @@ See `docs/architecture.md` for full rationale.
 - **Why yt-dlp?** Reddit separates audio/video streams, yt-dlp merges them
 
 ## Notes
+
 - Data directory created automatically on init
 - All media is deduplicated via content-addressed storage
 - Cache is automatic, don't manage it manually

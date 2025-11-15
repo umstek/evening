@@ -28,6 +28,7 @@ bun run db:inspect
 ## Project Vision
 
 Evening is a crawler/scraper that:
+
 1. Fetches content and automatically caches it (JSON, images, videos)
 2. Analyzes JSON structures and discovers types using quicktype
 3. Identifies URLs, media, and safe download targets
