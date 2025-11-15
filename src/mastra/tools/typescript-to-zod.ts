@@ -122,6 +122,14 @@ function generateZodSchema(
 	const zodFields = fields
 		.map((field) => {
 			const sampleValue = sampleData[field.name];
+
+			// Warn about missing required fields
+			if (sampleValue === undefined && !field.optional) {
+				console.warn(
+					`Warning: Required field "${field.name}" missing from sample data. Using z.unknown() as fallback.`,
+				);
+			}
+
 			let zodType = inferZodType(sampleValue);
 
 			// Make optional if needed

@@ -17,7 +17,7 @@
  * import { Agent } from "@mastra/core";
  *
  * // Google Gemini
- * const model = google("gemini-2.5-flash-lite", {
+ * const geminiModel = google("gemini-2.5-flash-lite", {
  *   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
  * });
  *
@@ -26,20 +26,20 @@
  *   apiKey: process.env.CEREBRAS_API_KEY,
  *   baseURL: "https://api.cerebras.ai/v1",
  * });
- * const model = cerebras("gpt-oss-120b");
+ * const cerebrasModel = cerebras("gpt-oss-120b");
  *
  * // Zhipu AI (custom base URL for GLM Coding Plan)
  * const zhipuAi = createOpenAI({
  *   apiKey: process.env.ZHIPU_AI_API_KEY,
  *   baseURL: "https://api.z.ai/api/coding/paas/v4/",
  * });
- * const model = zhipuAi("glm-4.6");
+ * const zhipuModel = zhipuAi("glm-4.6");
  *
- * // Use with Agent
+ * // Use with Agent (example with Gemini)
  * const agent = new Agent({
  *   name: "my-agent",
  *   instructions: "You are a helpful assistant",
- *   model,
+ *   model: geminiModel,
  * });
  * ```
  *
@@ -63,4 +63,6 @@ export const modelExamples = {
 		model: "glm-4.6",
 		config: `createOpenAI({ apiKey: process.env.ZHIPU_AI_API_KEY, baseURL: "https://api.z.ai/api/coding/paas/v4/" })("glm-4.6")`,
 	},
-};
+} as const;
+
+export type ModelExampleKey = keyof typeof modelExamples;

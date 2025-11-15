@@ -102,5 +102,9 @@ interface RedditComment {
 	console.log("   scraped data before storing in the content-addressed cache.");
 }
 
-// Run the example
-generateRedditSchemas().catch(console.error);
+// Only run if executed directly (not imported)
+if (import.meta.main) {
+	generateRedditSchemas().catch(console.error);
+}
+
+export { generateRedditSchemas };

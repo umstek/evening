@@ -4,11 +4,11 @@ This directory contains the Mastra AI framework integration for Evening. Mastra 
 
 ## Overview
 
-Mastra is a TypeScript AI framework that enables building autonomous agents with tools, memory, and workflows. We're integrating it carefully to enhance Evening's scraping capabilities with AI-powered decision making.
+Mastra is a TypeScript AI framework that enables building autonomous agents with tools, memory, and workflows. We're integrating it carefully to enhance Evening's scraping capabilities with AI-powered decision-making.
 
 ## Directory Structure
 
-```
+```text
 src/mastra/
 ├── index.ts           # Mastra configuration and exports
 ├── tools/             # Custom tools for agents
@@ -55,7 +55,7 @@ Start the development studio to interact with tools and agents:
 bun run mastra:dev
 ```
 
-Access the studio at: http://localhost:4111
+Access the studio at: <http://localhost:4111>
 
 ## Available Tools
 
