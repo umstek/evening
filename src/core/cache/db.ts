@@ -1,8 +1,9 @@
-import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { mkdir } from "node:fs/promises";
 import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const calls = sqliteTable(
 	"calls",
@@ -39,6 +40,9 @@ const sqlite = new Database("./data/db.sqlite", { create: true });
 export const db = drizzle(sqlite);
 
 export async function initializeDatabase() {
+	// Ensure data directory exists before creating database
+	await mkdir("./data", { recursive: true });
+
 	// Run Drizzle migrations to create tables and indexes
 	await migrate(db, { migrationsFolder: "./drizzle" });
 }

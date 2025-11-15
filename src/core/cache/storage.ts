@@ -1,8 +1,8 @@
-import { mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { db, content as contentTable } from "./db";
+import { mkdir } from "node:fs/promises";
 import { eq, sql } from "drizzle-orm";
 import defaultLogger from "../../logger";
+import { content as contentTable, db } from "./db";
 
 const logger = defaultLogger.child({ module: "storage" });
 
@@ -17,6 +17,15 @@ export function hashContent(content: Buffer | string): string {
 	return createHash("sha256").update(buffer).digest("hex");
 }
 
+/**
+ * Maps MIME types to file extensions
+ *
+ * We use a simple map instead of a library (like 'mime-types') because:
+ * - Only includes MIME types we actually use (YAGNI)
+ * - No external dependencies
+ * - Fast O(1) lookup
+ * - Easy to extend when needed
+ */
 export function getExtensionFromMimeType(mimeType: string): string {
 	const mimeMap: Record<string, string> = {
 		"application/json": "json",

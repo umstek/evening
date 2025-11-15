@@ -1,154 +1,146 @@
 {
-  "version": "6",
-  "dialect": "sqlite",
-  "id": "ce5b35d1-1538-48c2-82c7-b5b95ce5d135",
-  "prevId": "00000000-0000-0000-0000-000000000000",
-  "tables": {
-    "calls": {
-      "name": "calls",
-      "columns": {
-        "args_hash": {
-          "name": "args_hash",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "function_name": {
-          "name": "function_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "args_json": {
-          "name": "args_json",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "content_hash": {
-          "name": "content_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        },
-        "last_accessed": {
-          "name": "last_accessed",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        },
-        "fetch_duration_ms": {
-          "name": "fetch_duration_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "function_name_idx": {
-          "name": "function_name_idx",
-          "columns": [
-            "function_name"
-          ],
-          "isUnique": false
-        },
-        "content_hash_idx": {
-          "name": "content_hash_idx",
-          "columns": [
-            "content_hash"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "calls_content_hash_content_hash_fk": {
-          "name": "calls_content_hash_content_hash_fk",
-          "tableFrom": "calls",
-          "tableTo": "content",
-          "columnsFrom": [
-            "content_hash"
-          ],
-          "columnsTo": [
-            "hash"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "content": {
-      "name": "content",
-      "columns": {
-        "hash": {
-          "name": "hash",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "file_path": {
-          "name": "file_path",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "size_bytes": {
-          "name": "size_bytes",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "mime_type": {
-          "name": "mime_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reference_count": {
-          "name": "reference_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    }
-  },
-  "views": {},
-  "enums": {},
-  "_meta": {
-    "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "internal": {
-    "indexes": {}
-  }
+	"version": "6",
+	"dialect": "sqlite",
+	"id": "ce5b35d1-1538-48c2-82c7-b5b95ce5d135",
+	"prevId": "00000000-0000-0000-0000-000000000000",
+	"tables": {
+		"calls": {
+			"name": "calls",
+			"columns": {
+				"args_hash": {
+					"name": "args_hash",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"function_name": {
+					"name": "function_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"args_json": {
+					"name": "args_json",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"content_hash": {
+					"name": "content_hash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false,
+					"default": "(unixepoch())"
+				},
+				"last_accessed": {
+					"name": "last_accessed",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false,
+					"default": "(unixepoch())"
+				},
+				"fetch_duration_ms": {
+					"name": "fetch_duration_ms",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				}
+			},
+			"indexes": {
+				"function_name_idx": {
+					"name": "function_name_idx",
+					"columns": ["function_name"],
+					"isUnique": false
+				},
+				"content_hash_idx": {
+					"name": "content_hash_idx",
+					"columns": ["content_hash"],
+					"isUnique": false
+				}
+			},
+			"foreignKeys": {
+				"calls_content_hash_content_hash_fk": {
+					"name": "calls_content_hash_content_hash_fk",
+					"tableFrom": "calls",
+					"tableTo": "content",
+					"columnsFrom": ["content_hash"],
+					"columnsTo": ["hash"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"content": {
+			"name": "content",
+			"columns": {
+				"hash": {
+					"name": "hash",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"file_path": {
+					"name": "file_path",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"size_bytes": {
+					"name": "size_bytes",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"mime_type": {
+					"name": "mime_type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"reference_count": {
+					"name": "reference_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false,
+					"default": 0
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		}
+	},
+	"views": {},
+	"enums": {},
+	"_meta": {
+		"schemas": {},
+		"tables": {},
+		"columns": {}
+	},
+	"internal": {
+		"indexes": {}
+	}
 }
