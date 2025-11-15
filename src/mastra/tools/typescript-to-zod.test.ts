@@ -42,6 +42,7 @@ interface RedditPost {
 				interfaceString,
 				sampleData,
 			},
+			runtimeContext: {} as any,
 		});
 
 		console.log("✅ Success!");

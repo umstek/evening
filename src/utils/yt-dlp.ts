@@ -32,7 +32,7 @@ function getYtDlpBinaryName(): string {
 		if (arch === "x64") {
 			return "yt-dlp_linux";
 		}
-		if (arch === "arm64" || arch === "aarch64") {
+		if (arch === "arm64") {
 			return "yt-dlp_linux_aarch64";
 		}
 		throw new Error(`Unsupported Linux architecture: ${arch}`);

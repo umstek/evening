@@ -81,14 +81,14 @@ function parseTypeScriptInterface(interfaceString: string): {
 
 	// Extract interface name
 	const nameMatch = cleaned.match(/interface\s+(\w+)/);
-	if (!nameMatch) {
+	if (!nameMatch || !nameMatch[1]) {
 		throw new Error("Invalid TypeScript interface: no interface keyword found");
 	}
 	const name = nameMatch[1];
 
 	// Extract body content between braces
 	const bodyMatch = cleaned.match(/\{([\s\S]*)\}/);
-	if (!bodyMatch) {
+	if (!bodyMatch || !bodyMatch[1]) {
 		throw new Error("Invalid TypeScript interface: no body found");
 	}
 	const body = bodyMatch[1];
@@ -99,11 +99,13 @@ function parseTypeScriptInterface(interfaceString: string): {
 
 	let match = fieldRegex.exec(body);
 	while (match !== null) {
-		fields.push({
-			name: match[1],
-			type: match[3].trim(),
-			optional: match[2] === "?",
-		});
+		if (match[1] && match[3]) {
+			fields.push({
+				name: match[1],
+				type: match[3].trim(),
+				optional: match[2] === "?",
+			});
+		}
 		match = fieldRegex.exec(body);
 	}
 

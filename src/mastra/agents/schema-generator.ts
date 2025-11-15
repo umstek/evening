@@ -7,7 +7,7 @@ import { typescriptToZodTool } from "../tools/typescript-to-zod";
  * This demonstrates how to create an agent that uses our custom tools.
  * The agent can be configured with different AI providers (Gemini, Cerebras, etc.)
  */
-export function createSchemaGeneratorAgent(model: unknown) {
+export function createSchemaGeneratorAgent(model: any) {
 	return new Agent({
 		name: "schema-generator",
 		instructions: `You are a helpful assistant that generates Zod schemas from TypeScript interfaces.

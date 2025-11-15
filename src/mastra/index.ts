@@ -5,12 +5,8 @@ import { typescriptToZodTool } from "./tools/typescript-to-zod";
  * Central Mastra configuration for Evening crawler
  *
  * This is the entry point for all AI agents, tools, and workflows.
- * As we add more capabilities, they should be registered here.
+ * Tools are used directly by agents, not registered globally in newer Mastra versions.
  */
-export const mastra = new Mastra({
-	tools: {
-		typescriptToZod: typescriptToZodTool,
-	},
-});
+export const mastra = new Mastra({});
 
 export { typescriptToZodTool };

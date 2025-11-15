@@ -52,6 +52,7 @@ interface RedditPost {
 			interfaceString: postInterface,
 			sampleData: postSample,
 		},
+		runtimeContext: {} as any,
 	});
 
 	console.log(postResult.zodSchema);
@@ -93,6 +94,7 @@ interface RedditComment {
 			interfaceString: commentInterface,
 			sampleData: commentSample,
 		},
+		runtimeContext: {} as any,
 	});
 
 	console.log(commentResult.zodSchema);
