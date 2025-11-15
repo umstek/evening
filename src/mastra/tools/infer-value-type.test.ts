@@ -12,7 +12,7 @@ async function testInferValueType() {
 				"https://reddit.com/r/programming",
 				"https://github.com/user/repo",
 			],
-			expected: "z.string().url()",
+			expected: "z.url()",
 		},
 		{
 			name: "Positive integers (scores)",

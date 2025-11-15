@@ -24,17 +24,18 @@ function inferZodType(sampleValues: unknown[]): string {
 		const strings = definedValues as string[];
 
 		// Only narrow down if 100% of samples pass validation
-		if (strings.every((s) => z.string().url().safeParse(s).success)) {
-			return "z.string().url()";
+		// Use Zod v4 API (top-level functions)
+		if (strings.every((s) => z.url().safeParse(s).success)) {
+			return "z.url()";
 		}
-		if (strings.every((s) => z.string().email().safeParse(s).success)) {
-			return "z.string().email()";
+		if (strings.every((s) => z.email().safeParse(s).success)) {
+			return "z.email()";
 		}
-		if (strings.every((s) => z.string().uuid().safeParse(s).success)) {
-			return "z.string().uuid()";
+		if (strings.every((s) => z.uuid().safeParse(s).success)) {
+			return "z.uuid()";
 		}
-		if (strings.every((s) => z.string().datetime().safeParse(s).success)) {
-			return "z.string().datetime()";
+		if (strings.every((s) => z.iso.datetime().safeParse(s).success)) {
+			return "z.iso.datetime()";
 		}
 		return "z.string()";
 	}
