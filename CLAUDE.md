@@ -65,6 +65,22 @@ See `README.md` for user-facing docs and getting started.
 
 **Example**: MIME mapping uses simple map (10 types, no edge cases). Cryptography ALWAYS uses libraries.
 
+## Getting Up-to-Date Documentation
+
+Use **Context7 API** to fetch current library documentation (prevents using outdated APIs):
+
+```bash
+# Search for a library
+curl "https://context7.com/api/v1/search?query=mastra" \
+  -H "Authorization: Bearer $CONTEXT7_API_KEY"
+
+# Get docs for specific topic
+curl "https://context7.com/api/v1/mastra-ai/mastra?type=txt&topic=tool+execute&tokens=5000" \
+  -H "Authorization: Bearer $CONTEXT7_API_KEY"
+```
+
+**Parameters**: `type` (txt/json), `topic` (search filter), `tokens` (limit)
+
 ## Database Schema
 
 ### `calls` Table
