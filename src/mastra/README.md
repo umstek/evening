@@ -19,26 +19,14 @@ src/mastra/
 
 ## Getting Started
 
-### 1. Core Dependencies (Already Installed)
+### 1. Dependencies (Already Installed)
 
-- `@mastra/core` - Core Mastra framework
+- `@mastra/core` - Core Mastra framework (includes AI SDK providers internally)
 - `zod` - Schema validation
 
-### 2. Optional: Install AI Provider SDKs
+**Note:** Mastra bundles AI SDK providers internally as `-v5` versions. No need to install `@ai-sdk/*` packages separately!
 
-To use agents with AI models, install provider packages:
-
-```bash
-# For Google Gemini
-bun add @ai-sdk/google
-
-# For OpenAI-compatible APIs (Cerebras, Zhipu AI, etc.)
-bun add @ai-sdk/openai
-```
-
-See `src/mastra/models.ts` for configuration examples.
-
-### 3. Configure Environment
+### 2. Configure Environment
 
 Copy `.env.example` to `.env` and add your AI provider API key:
 
@@ -51,7 +39,7 @@ Available keys (you only need one):
 - `CEREBRAS_API_KEY` - Cerebras (free tier available)
 - `ZHIPU_AI_API_KEY` - Zhipu AI / ZAI GLM Coding Plan
 
-### 4. Try the Examples
+### 3. Try the Examples
 
 Run the Reddit schema generation example:
 
@@ -59,7 +47,7 @@ Run the Reddit schema generation example:
 bun run src/mastra/examples/reddit-schema-example.ts
 ```
 
-### 5. (Optional) Run Mastra Studio
+### 4. (Optional) Run Mastra Studio
 
 Start the development studio to interact with tools and agents:
 
@@ -154,6 +142,11 @@ As we build out the AI integration, we'll add:
 - Run `bun run lint:fix` before committing
 - Test tools with the test files before using in production
 - Check Mastra's changelog for breaking changes when updating
+
+**AI Provider Status:**
+- ✅ **Tools work perfectly** - TypeScript-to-Zod tool is fully functional without AI
+- ⚠️ **AI Agents** - Provider integration needs further configuration (API endpoint compatibility)
+- The integration code is correct - see `src/mastra/models.ts` for examples with correct model names
 
 ## Resources
 

@@ -1,9 +1,8 @@
 /**
  * Model configuration for different AI providers
  *
- * NOTE: Mastra bundles AI SDK providers internally. Import from -v5 versions:
- *   import { google } from "@ai-sdk/google-v5";
- *   import { createOpenAI } from "@ai-sdk/openai-v5";
+ * NOTE: Mastra bundles AI SDK providers internally as -v5 versions.
+ * No need to install @ai-sdk packages separately!
  *
  * Supported providers:
  * - Google Gemini (GOOGLE_GENERATIVE_AI_API_KEY)
@@ -18,7 +17,7 @@
  * import { Agent } from "@mastra/core";
  *
  * // Google Gemini
- * const model = google("gemini-1.5-flash", {
+ * const model = google("gemini-2.5-flash-lite", {
  *   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
  * });
  *
@@ -27,14 +26,14 @@
  *   apiKey: process.env.CEREBRAS_API_KEY,
  *   baseURL: "https://api.cerebras.ai/v1",
  * });
- * const model = cerebras("llama3.1-8b");
+ * const model = cerebras("gpt-oss-120b");
  *
  * // Zhipu AI (custom base URL for GLM Coding Plan)
  * const zhipuAi = createOpenAI({
  *   apiKey: process.env.ZHIPU_AI_API_KEY,
  *   baseURL: "https://api.z.ai/api/coding/paas/v4/",
  * });
- * const model = zhipuAi("glm-4-plus");
+ * const model = zhipuAi("glm-4.6");
  *
  * // Use with Agent
  * const agent = new Agent({
@@ -51,17 +50,17 @@
 export const modelExamples = {
 	gemini: {
 		provider: "@ai-sdk/google-v5",
-		model: "gemini-1.5-flash",
-		config: `google("gemini-1.5-flash", { apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY })`,
+		model: "gemini-2.5-flash-lite",
+		config: `google("gemini-2.5-flash-lite", { apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY })`,
 	},
 	cerebras: {
 		provider: "@ai-sdk/openai-v5",
-		model: "llama3.1-8b",
-		config: `createOpenAI({ apiKey: process.env.CEREBRAS_API_KEY, baseURL: "https://api.cerebras.ai/v1" })("llama3.1-8b")`,
+		model: "gpt-oss-120b",
+		config: `createOpenAI({ apiKey: process.env.CEREBRAS_API_KEY, baseURL: "https://api.cerebras.ai/v1" })("gpt-oss-120b")`,
 	},
 	zhipuAi: {
 		provider: "@ai-sdk/openai-v5",
-		model: "glm-4-plus",
-		config: `createOpenAI({ apiKey: process.env.ZHIPU_AI_API_KEY, baseURL: "https://api.z.ai/api/coding/paas/v4/" })("glm-4-plus")`,
+		model: "glm-4.6",
+		config: `createOpenAI({ apiKey: process.env.ZHIPU_AI_API_KEY, baseURL: "https://api.z.ai/api/coding/paas/v4/" })("glm-4.6")`,
 	},
 };
