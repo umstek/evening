@@ -145,13 +145,20 @@ export class Reddit {
     // Returns ArrayBuffer
   }
 
+  @memoize({ provider: 'reddit' })
+  async getVideoWithYtDlp({ url }: GetMediaParams) {
+    // Fetches video using yt-dlp (handles audio+video merging)
+    // Returns ArrayBuffer
+  }
+
   async getImage(params: GetPostParams) {
     // Extracts image URL from post and fetches it
     // Returns { metadata, content: ArrayBuffer }
   }
 
   async getVideo(params: GetPostParams) {
-    // Extracts video URL from post and fetches it
+    // Extracts video URL from post and fetches it with yt-dlp
+    // Falls back to direct download if yt-dlp fails
     // Returns { metadata, content: ArrayBuffer }
   }
 
@@ -201,7 +208,13 @@ const { metadata, content } = await reddit.getImage({
 
 #### `getVideo(params)`
 
-Extracts and downloads a video from a Reddit post. Uses `post.media.reddit_video.fallback_url` for the video file.
+Extracts and downloads a video from a Reddit post. Uses **yt-dlp** to handle audio+video merging, as Reddit often separates audio and video streams.
+
+**How it works:**
+1. Tries yt-dlp first (merges audio+video for best quality)
+2. Falls back to direct download if yt-dlp fails (video only, no audio)
+3. yt-dlp binary is lazily downloaded from GitHub releases on first use
+4. Binary is cached in `./data/bin/` and platform-detected (Linux, macOS, Windows)
 
 ```typescript
 const { metadata, content } = await reddit.getVideo({
@@ -210,7 +223,7 @@ const { metadata, content } = await reddit.getVideo({
   title: 'amazing_video',
 });
 // metadata: { url, fallbackUrl?, hlsUrl?, dashUrl?, width?, height?, duration? }
-// content: ArrayBuffer
+// content: ArrayBuffer (with audio+video merged)
 ```
 
 #### `getGallery(params)`
@@ -235,7 +248,31 @@ const items = await reddit.getGallery({
 - Both calls are independently memoized (deduplication)
 - Same image from different posts = single cached file
 - Metadata extraction happens in the method, not cached
-- Binary content cached via `getMedia`
+- Binary content cached via `getMedia` or `getVideoWithYtDlp`
+
+### yt-dlp Integration
+
+The system includes a yt-dlp utility (`src/utils/yt-dlp.ts`) for robust video downloading.
+
+**Features:**
+
+- **Lazy binary download**: yt-dlp binary is downloaded from GitHub releases on first use
+- **Platform detection**: Automatically selects correct binary (Linux, macOS, Windows, ARM64)
+- **Binary caching**: Stored in `./data/bin/` for reuse across sessions
+- **Audio+video merging**: Handles Reddit's separate audio/video streams automatically
+- **Memoization**: Video downloads are cached via `@memoize` decorator
+
+**Why yt-dlp?**
+
+Reddit often serves video and audio as separate streams. Direct download only gets video (no audio). yt-dlp:
+1. Detects separate streams
+2. Downloads both audio and video
+3. Merges them into a single file
+4. Returns the complete video with audio
+
+**Fallback strategy:**
+
+If yt-dlp fails (network issues, unsupported format, etc.), the system falls back to direct HTTP download. This ensures reliability while preferring the best quality.
 
 ## Export & Traversal
 

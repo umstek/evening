@@ -1,5 +1,6 @@
 import { initializeDatabase, memoize } from "../core/cache";
 import defaultLogger from "../logger";
+import { downloadVideoWithYtDlp } from "../utils/yt-dlp";
 
 const logger = defaultLogger.child({ module: "reddit" });
 
@@ -157,6 +158,22 @@ class Reddit {
 	}
 
 	/**
+	 * Fetches video using yt-dlp (handles audio+video merging for Reddit)
+	 * @param url - Video URL (Reddit post URL or direct video URL)
+	 * @returns ArrayBuffer containing the video content
+	 */
+	@memoize({ provider: "reddit" })
+	async getVideoWithYtDlp({ url }: GetMediaParams): Promise<ArrayBuffer> {
+		logger.info(`fetching video with yt-dlp from ${url}`);
+		const buffer = await downloadVideoWithYtDlp(url);
+		logger.info({ url, sizeBytes: buffer.length }, "fetched video with yt-dlp");
+		return buffer.buffer.slice(
+			buffer.byteOffset,
+			buffer.byteOffset + buffer.byteLength,
+		);
+	}
+
+	/**
 	 * Extracts and fetches a single image from a Reddit post
 	 * Handles both direct image links and preview images
 	 * @param params - Post identification parameters
@@ -203,6 +220,7 @@ class Reddit {
 
 	/**
 	 * Extracts and fetches a video from a Reddit post
+	 * Uses yt-dlp to handle audio+video merging for Reddit videos
 	 * @param params - Post identification parameters
 	 * @returns Video metadata and binary content
 	 */
@@ -226,12 +244,31 @@ class Reddit {
 			throw new Error("No video URL found in post");
 		}
 
-		const videoUrl = redditVideo.fallback_url;
-		const content = await this.getMedia({ url: videoUrl });
+		// Construct full Reddit post URL for yt-dlp
+		// yt-dlp can merge audio+video streams that Reddit separates
+		const postUrl = `${REDDIT}/r/${params.subreddit}/comments/${params.id}/${params.title}/`;
+
+		let content: ArrayBuffer;
+		try {
+			// Try yt-dlp first (best quality with audio+video merged)
+			content = await this.getVideoWithYtDlp({ url: postUrl });
+		} catch (ytDlpError) {
+			// Fall back to direct download (video only, no audio)
+			logger.warn(
+				{
+					error:
+						ytDlpError instanceof Error
+							? ytDlpError.message
+							: String(ytDlpError),
+				},
+				"yt-dlp failed, falling back to direct download",
+			);
+			content = await this.getMedia({ url: redditVideo.fallback_url });
+		}
 
 		return {
 			metadata: {
-				url: videoUrl,
+				url: postUrl,
 				fallbackUrl: redditVideo.fallback_url,
 				hlsUrl: redditVideo.hls_url,
 				dashUrl: redditVideo.dash_url,
