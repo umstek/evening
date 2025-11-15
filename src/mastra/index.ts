@@ -1,4 +1,5 @@
 import { Mastra } from "@mastra/core";
+import { inferValueTypeTool } from "./tools/infer-value-type";
 import { typescriptToZodTool } from "./tools/typescript-to-zod";
 
 /**
@@ -9,4 +10,4 @@ import { typescriptToZodTool } from "./tools/typescript-to-zod";
  */
 export const mastra = new Mastra({});
 
-export { typescriptToZodTool };
+export { inferValueTypeTool, typescriptToZodTool };
