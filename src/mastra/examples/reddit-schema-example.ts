@@ -1,3 +1,4 @@
+import { RuntimeContext } from "@mastra/core/runtime-context";
 import { typescriptToZodTool } from "../tools/typescript-to-zod";
 
 /**
@@ -52,7 +53,7 @@ interface RedditPost {
 			interfaceString: postInterface,
 			sampleData: postSample,
 		},
-		runtimeContext: {} as any,
+		runtimeContext: new RuntimeContext(),
 	});
 
 	console.log(postResult.zodSchema);
@@ -94,7 +95,7 @@ interface RedditComment {
 			interfaceString: commentInterface,
 			sampleData: commentSample,
 		},
-		runtimeContext: {} as any,
+		runtimeContext: new RuntimeContext(),
 	});
 
 	console.log(commentResult.zodSchema);

@@ -1,3 +1,4 @@
+import { RuntimeContext } from "@mastra/core/runtime-context";
 import { typescriptToZodTool } from "./typescript-to-zod";
 
 /**
@@ -42,7 +43,7 @@ interface RedditPost {
 				interfaceString,
 				sampleData,
 			},
-			runtimeContext: {} as any,
+			runtimeContext: new RuntimeContext(),
 		});
 
 		console.log("✅ Success!");

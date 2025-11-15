@@ -1,4 +1,5 @@
-import { Agent } from "@mastra/core";
+import { Agent } from "@mastra/core/agent";
+import type { MastraModelConfig } from "@mastra/core/llm";
 import { typescriptToZodTool } from "../tools/typescript-to-zod";
 
 /**
@@ -7,7 +8,7 @@ import { typescriptToZodTool } from "../tools/typescript-to-zod";
  * This demonstrates how to create an agent that uses our custom tools.
  * The agent can be configured with different AI providers (Gemini, Cerebras, etc.)
  */
-export function createSchemaGeneratorAgent(model: any) {
+export function createSchemaGeneratorAgent(model: MastraModelConfig) {
 	return new Agent({
 		name: "schema-generator",
 		instructions: `You are a helpful assistant that generates Zod schemas from TypeScript interfaces.
