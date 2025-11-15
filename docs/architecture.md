@@ -287,7 +287,7 @@ const imageUrls = extractImageUrls(post);
 
 // Fetch each image (cached if previously fetched)
 for (const url of imageUrls) {
-  await reddit.getMedia(url);
+  await reddit.getMedia({ url });
 }
 
 // Export: Copy all referenced content

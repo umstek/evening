@@ -137,10 +137,10 @@ class Reddit {
 	/**
 	 * Fetches binary media content from a URL
 	 * @param url - Direct URL to the media file
-	 * @returns ArrayBuffer containing the media content
+	 * @returns Buffer containing the media content (consistent with cache layer)
 	 */
 	@memoize({ provider: "reddit" })
-	async getMedia({ url }: GetMediaParams): Promise<ArrayBuffer> {
+	async getMedia({ url }: GetMediaParams): Promise<Buffer> {
 		logger.info(`fetching media from ${url}`);
 		const response = await fetch(url, UA);
 
@@ -154,7 +154,9 @@ class Reddit {
 		}
 
 		logger.info({ url, statusCode: response.status }, "fetched media");
-		return await response.arrayBuffer();
+		const arrayBuffer = await response.arrayBuffer();
+		// Return Buffer to match cache layer behavior
+		return Buffer.from(arrayBuffer);
 	}
 
 	/**
@@ -179,7 +181,7 @@ class Reddit {
 	 */
 	async getImage(params: GetPostParams): Promise<{
 		metadata: MediaMetadata;
-		content: ArrayBuffer;
+		content: Buffer;
 	}> {
 		const post = await this.getPost(params);
 		const postData = post?.[0]?.data?.children?.[0]?.data;
@@ -199,9 +201,9 @@ class Reddit {
 			width = source.width;
 			height = source.height;
 		}
-		// Fall back to direct URL
+		// Fall back to direct URL (also decode for consistency)
 		else if (postData.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(postData.url)) {
-			imageUrl = postData.url;
+			imageUrl = this.decodeRedditUrl(postData.url);
 		}
 
 		if (!imageUrl) {
@@ -224,7 +226,7 @@ class Reddit {
 	 */
 	async getVideo(params: GetPostParams): Promise<{
 		metadata: VideoMetadata;
-		content: ArrayBuffer | Buffer;
+		content: Buffer;
 	}> {
 		const post = await this.getPost(params);
 		const postData = post?.[0]?.data?.children?.[0]?.data;
@@ -242,14 +244,16 @@ class Reddit {
 			throw new Error("No video URL found in post");
 		}
 
+		// Decode fallback URL for consistency
+		const decodedFallbackUrl = this.decodeRedditUrl(redditVideo.fallback_url);
+
 		// Construct full Reddit post URL for yt-dlp
 		// yt-dlp can merge audio+video streams that Reddit separates
 		const postUrl = `${REDDIT}/r/${params.subreddit}/comments/${params.id}/${params.title}/`;
 
-		let content: ArrayBuffer | Buffer;
+		let content: Buffer;
 		try {
 			// Try yt-dlp first (best quality with audio+video merged)
-			// Returns Buffer from cache or yt-dlp
 			content = await this.getVideoWithYtDlp({ url: postUrl });
 		} catch (ytDlpError) {
 			// Fall back to direct download (video only, no audio)
@@ -264,14 +268,13 @@ class Reddit {
 				},
 				"yt-dlp failed, falling back to direct download",
 			);
-			const fallbackUrl = this.decodeRedditUrl(redditVideo.fallback_url);
-			content = await this.getMedia({ url: fallbackUrl });
+			content = await this.getMedia({ url: decodedFallbackUrl });
 		}
 
 		return {
 			metadata: {
 				url: postUrl,
-				fallbackUrl: redditVideo.fallback_url,
+				fallbackUrl: decodedFallbackUrl,
 				hlsUrl: redditVideo.hls_url,
 				dashUrl: redditVideo.dash_url,
 				width: redditVideo.width,
@@ -290,7 +293,7 @@ class Reddit {
 	async getGallery(params: GetPostParams): Promise<
 		Array<{
 			metadata: GalleryItem;
-			content: ArrayBuffer;
+			content: Buffer;
 		}>
 	> {
 		const post = await this.getPost(params);
