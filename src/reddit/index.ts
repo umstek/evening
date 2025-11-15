@@ -347,14 +347,14 @@ async function main() {
 
 		const reddit = new Reddit();
 
-		// Example: Get an image post
-		const imagePost = await reddit.getImage({
+		// Example: Fetch a post (JSON is automatically cached)
+		const post = await reddit.getPost({
 			subreddit: "interestingasfuck",
 			id: "1oftwfk",
 			title: "photographer_shows_his_pov_vs_the_photos_he_takes",
 		});
-		logger.info({ metadata: imagePost.metadata }, "fetched image");
 
+		logger.info({ postFetched: !!post }, "post fetched and cached");
 		logger.info("completed");
 	} catch (error) {
 		logger.error(
