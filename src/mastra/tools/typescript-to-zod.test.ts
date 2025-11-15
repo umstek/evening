@@ -23,19 +23,45 @@ interface RedditPost {
 }
   `.trim();
 
-	// Sample data for inference
-	const sampleData = {
-		id: "abc123",
-		title: "An interesting post",
-		author: "reddit_user",
-		url: "https://reddit.com/r/programming/comments/abc123",
-		score: 42,
-		num_comments: 15,
-		created_utc: 1699564800,
-		permalink: "/r/programming/comments/abc123/an_interesting_post",
-		is_video: false,
-		thumbnail: "https://i.redd.it/thumbnail.jpg",
-	};
+	// Multiple sample data objects for better inference
+	// The algorithm analyzes ALL samples and only narrows down if 100% match
+	const sampleData = [
+		{
+			id: "abc123",
+			title: "An interesting post",
+			author: "reddit_user",
+			url: "https://reddit.com/r/programming/comments/abc123",
+			score: 42,
+			num_comments: 15,
+			created_utc: 1699564800,
+			permalink: "/r/programming/comments/abc123/an_interesting_post",
+			is_video: false,
+			thumbnail: "https://i.redd.it/thumbnail.jpg",
+		},
+		{
+			id: "def456",
+			title: "Another post",
+			author: "another_user",
+			url: "https://reddit.com/r/javascript/comments/def456",
+			score: 128,
+			num_comments: 3,
+			created_utc: 1699651200,
+			permalink: "/r/javascript/comments/def456/another_post",
+			is_video: true,
+			thumbnail: "https://i.redd.it/thumb2.jpg",
+		},
+		{
+			id: "ghi789",
+			title: "Third example",
+			author: "test_user",
+			url: "https://reddit.com/r/webdev/comments/ghi789",
+			score: 7,
+			num_comments: 0,
+			created_utc: 1699737600,
+			permalink: "/r/webdev/comments/ghi789/third_example",
+			is_video: false,
+		},
+	];
 
 	try {
 		const result = await typescriptToZodTool.execute({

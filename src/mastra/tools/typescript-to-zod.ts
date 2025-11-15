@@ -2,63 +2,98 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
 /**
- * Analyzes sample data to infer appropriate Zod validators
- * Uses Zod's actual validation instead of naive regex
+ * Analyzes multiple sample values to infer appropriate Zod validators
+ * Uses Zod's actual validation and requires 100% match to narrow down types
  */
-function inferZodType(sampleValue: unknown): string {
-	if (sampleValue === null || sampleValue === undefined) {
+function inferZodType(sampleValues: unknown[]): string {
+	if (sampleValues.length === 0) {
 		return "z.unknown()";
 	}
 
-	if (typeof sampleValue === "string") {
-		// Actually test if it passes Zod's URL validation
-		if (z.string().url().safeParse(sampleValue).success) {
+	// Filter out null/undefined for type analysis
+	const definedValues = sampleValues.filter(
+		(v) => v !== null && v !== undefined,
+	);
+	if (definedValues.length === 0) {
+		return "z.unknown()";
+	}
+
+	// Check if all samples are strings
+	const allStrings = definedValues.every((v) => typeof v === "string");
+	if (allStrings) {
+		const strings = definedValues as string[];
+
+		// Only narrow down if 100% of samples pass validation
+		if (strings.every((s) => z.string().url().safeParse(s).success)) {
 			return "z.string().url()";
 		}
-		// Actually test if it passes Zod's email validation
-		if (z.string().email().safeParse(sampleValue).success) {
+		if (strings.every((s) => z.string().email().safeParse(s).success)) {
 			return "z.string().email()";
 		}
-		// Actually test if it passes Zod's UUID validation
-		if (z.string().uuid().safeParse(sampleValue).success) {
+		if (strings.every((s) => z.string().uuid().safeParse(s).success)) {
 			return "z.string().uuid()";
 		}
-		// Actually test if it passes Zod's datetime validation
-		if (z.string().datetime().safeParse(sampleValue).success) {
+		if (strings.every((s) => z.string().datetime().safeParse(s).success)) {
 			return "z.string().datetime()";
 		}
 		return "z.string()";
 	}
 
-	if (typeof sampleValue === "number") {
-		if (Number.isInteger(sampleValue)) {
+	// Check if all samples are numbers
+	const allNumbers = definedValues.every((v) => typeof v === "number");
+	if (allNumbers) {
+		const numbers = definedValues as number[];
+
+		// Check if ALL are integers
+		if (numbers.every((n) => Number.isInteger(n))) {
+			// Check if ALL are positive (> 0)
+			if (numbers.every((n) => n > 0)) {
+				return "z.number().int().positive()";
+			}
+			// Check if ALL are non-negative (>= 0)
+			if (numbers.every((n) => n >= 0)) {
+				return "z.number().int().nonnegative()";
+			}
 			return "z.number().int()";
+		}
+
+		// Not all integers, check if all positive floats
+		if (numbers.every((n) => n > 0)) {
+			return "z.number().positive()";
+		}
+		if (numbers.every((n) => n >= 0)) {
+			return "z.number().nonnegative()";
 		}
 		return "z.number()";
 	}
 
-	if (typeof sampleValue === "boolean") {
+	// Check if all samples are booleans
+	const allBooleans = definedValues.every((v) => typeof v === "boolean");
+	if (allBooleans) {
 		return "z.boolean()";
 	}
 
-	if (Array.isArray(sampleValue)) {
-		if (sampleValue.length === 0) {
+	// Check if all samples are arrays
+	const allArrays = definedValues.every((v) => Array.isArray(v));
+	if (allArrays) {
+		const arrays = definedValues as unknown[][];
+		// Collect all array elements from all samples
+		const allElements = arrays.flat();
+		if (allElements.length === 0) {
 			return "z.array(z.unknown())";
 		}
-		const firstElement = sampleValue[0];
-		const elementType = inferZodType(firstElement);
+		const elementType = inferZodType(allElements);
 		return `z.array(${elementType})`;
 	}
 
-	if (typeof sampleValue === "object") {
-		const entries = Object.entries(sampleValue as Record<string, unknown>);
-		const fields = entries
-			.map(([key, value]) => {
-				const zodType = inferZodType(value);
-				return `    ${key}: ${zodType}`;
-			})
-			.join(",\n");
-		return `z.object({\n${fields}\n  })`;
+	// Check if all samples are objects
+	const allObjects = definedValues.every(
+		(v) => typeof v === "object" && !Array.isArray(v),
+	);
+	if (allObjects) {
+		// For nested objects, we'd need to recursively analyze
+		// For now, just use generic object
+		return "z.record(z.string(), z.unknown())";
 	}
 
 	return "z.unknown()";
@@ -110,26 +145,28 @@ function parseTypeScriptInterface(interfaceString: string): {
 }
 
 /**
- * Generates a Zod schema and refined TypeScript interface from sample data
+ * Generates a Zod schema and refined TypeScript interface from multiple sample data
  */
 function generateZodSchema(
 	interfaceString: string,
-	sampleData: Record<string, unknown>,
+	sampleDataArray: Array<Record<string, unknown>>,
 ): { zodSchema: string; refinedInterface: string } {
 	const { name, fields } = parseTypeScriptInterface(interfaceString);
 
 	const zodFields = fields
 		.map((field) => {
-			const sampleValue = sampleData[field.name];
+			// Collect all sample values for this field across all samples
+			const sampleValues = sampleDataArray.map((data) => data[field.name]);
 
 			// Warn about missing required fields
-			if (sampleValue === undefined && !field.optional) {
+			const allMissing = sampleValues.every((v) => v === undefined);
+			if (allMissing && !field.optional) {
 				console.warn(
-					`Warning: Required field "${field.name}" missing from sample data. Using z.unknown() as fallback.`,
+					`Warning: Required field "${field.name}" missing from all sample data. Using z.unknown() as fallback.`,
 				);
 			}
 
-			let zodType = inferZodType(sampleValue);
+			let zodType = inferZodType(sampleValues);
 
 			// Make optional if needed
 			if (field.optional) {
@@ -145,15 +182,7 @@ function generateZodSchema(
 	// Generate refined TypeScript interface based on inferred types
 	const interfaceFields = fields
 		.map((field) => {
-			const sampleValue = sampleData[field.name];
-			let tsType = field.type;
-
-			// Refine type based on sample data if it's generic
-			if (field.type === "string" && typeof sampleValue === "string") {
-				// Keep as string, but note it could be more specific
-				tsType = "string";
-			}
-
+			const tsType = field.type;
 			const optional = field.optional ? "?" : "";
 			return `  ${field.name}${optional}: ${tsType};`;
 		})
@@ -171,15 +200,15 @@ function generateZodSchema(
 export const typescriptToZodTool = createTool({
 	id: "typescript-to-zod",
 	description:
-		"Converts a TypeScript interface definition to a Zod schema with intelligent validations (URLs, emails, integers, etc.) based on sample data",
+		"Converts a TypeScript interface definition to a Zod schema with intelligent validations (URLs, emails, integers, etc.) based on multiple sample data objects. Analyzes all samples to infer types - only narrows down if 100% of samples match (e.g., all integers, all positive, all URLs).",
 	inputSchema: z.object({
 		interfaceString: z
 			.string()
 			.describe("The TypeScript interface definition as a string"),
 		sampleData: z
-			.record(z.string(), z.any())
+			.array(z.record(z.string(), z.any()))
 			.describe(
-				"Sample data object with example values for each field to infer validators",
+				"Array of sample data objects. More samples = better type inference. Algorithm requires 100% match to narrow down types (e.g., if all samples are positive integers, infers z.number().int().positive())",
 			),
 	}),
 	outputSchema: z.object({

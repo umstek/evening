@@ -32,26 +32,44 @@ interface RedditPost {
 }
   `.trim();
 
-	const postSample = {
-		id: "abc123",
-		title: "Interesting programming article",
-		author: "reddit_user",
-		subreddit: "programming",
-		url: "https://example.com/article",
-		permalink: "/r/programming/comments/abc123/interesting_programming_article",
-		score: 1234,
-		num_comments: 56,
-		created_utc: 1699564800,
-		is_video: false,
-		is_self: false,
-		thumbnail: "https://i.redd.it/thumb.jpg",
-		preview: {},
-	};
+	// Multiple samples for better type inference
+	const postSamples = [
+		{
+			id: "abc123",
+			title: "Interesting programming article",
+			author: "reddit_user",
+			subreddit: "programming",
+			url: "https://example.com/article",
+			permalink:
+				"/r/programming/comments/abc123/interesting_programming_article",
+			score: 1234,
+			num_comments: 56,
+			created_utc: 1699564800,
+			is_video: false,
+			is_self: false,
+			thumbnail: "https://i.redd.it/thumb.jpg",
+			preview: {},
+		},
+		{
+			id: "def456",
+			title: "Another post",
+			author: "another_user",
+			subreddit: "javascript",
+			url: "https://github.com/example/repo",
+			permalink: "/r/javascript/comments/def456/another_post",
+			score: 89,
+			num_comments: 12,
+			created_utc: 1699651200,
+			is_video: true,
+			is_self: false,
+			thumbnail: "https://i.redd.it/thumb2.jpg",
+		},
+	];
 
 	const postResult = await typescriptToZodTool.execute({
 		context: {
 			interfaceString: postInterface,
-			sampleData: postSample,
+			sampleData: postSamples,
 		},
 		runtimeContext: new RuntimeContext(),
 	});
@@ -77,23 +95,39 @@ interface RedditComment {
 }
   `.trim();
 
-	const commentSample = {
-		id: "def456",
-		author: "commenter",
-		body: "Great post!",
-		score: 42,
-		created_utc: 1699565000,
-		parent_id: "t3_abc123",
-		permalink:
-			"/r/programming/comments/abc123/interesting_programming_article/def456",
-		depth: 1,
-		is_submitter: false,
-	};
+	// Multiple comment samples
+	const commentSamples = [
+		{
+			id: "def456",
+			author: "commenter",
+			body: "Great post!",
+			score: 42,
+			created_utc: 1699565000,
+			parent_id: "t3_abc123",
+			permalink:
+				"/r/programming/comments/abc123/interesting_programming_article/def456",
+			depth: 1,
+			is_submitter: false,
+		},
+		{
+			id: "ghi789",
+			author: "another_commenter",
+			body: "I agree",
+			score: 5,
+			created_utc: 1699565100,
+			parent_id: "t1_def456",
+			permalink:
+				"/r/programming/comments/abc123/interesting_programming_article/ghi789",
+			depth: 2,
+			is_submitter: false,
+			edited: 1699565200,
+		},
+	];
 
 	const commentResult = await typescriptToZodTool.execute({
 		context: {
 			interfaceString: commentInterface,
-			sampleData: commentSample,
+			sampleData: commentSamples,
 		},
 		runtimeContext: new RuntimeContext(),
 	});
