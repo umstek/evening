@@ -173,11 +173,41 @@ When solving a problem, follow this priority order:
 - Follow **YAGNI** (You Aren't Gonna Need It)
 - Follow **POLA** (Principle of Least Astonishment)
 
+### When Libraries Win: The Battle-Tested Argument
+
+**Libraries provide real value when:**
+- **Complex domains**: Date/time, URL parsing, file paths have subtle edge cases
+- **Security-critical**: Crypto, input validation, HTML sanitization require expertise
+- **Standards compliance**: HTTP clients, JSON parsers need strict spec adherence
+- **Battle-tested reliability**: Thousands of users + unit tests catch bugs you'd miss
+- **Maintenance burden**: Timezone handling, internationalization are ongoing work
+
+**Examples where libraries are the right choice:**
+- Cryptography: NEVER roll your own (use built-in crypto or proven libraries)
+- Date/time: Use `date-fns` or built-in `Temporal` (when available)
+- URL parsing: Use built-in `URL` class (battle-tested, handles edge cases)
+- Input sanitization: Use proven libraries (security bugs are costly)
+
+**Write it yourself when:**
+- **Genuinely simple**: Lookup tables, basic string manipulation
+- **Need flexibility**: Library doesn't support your exact use case
+- **Adds bloat**: Importing 1000 MIME types when you need 10
+- **Easily validated**: You can write simple tests to verify correctness
+- **No hidden complexity**: Problem domain is well-understood
+
+**The lifecycle pattern:**
+1. Start simple: Hand-written code works for basic case
+2. Hit complexity: Adopt library when edge cases emerge
+3. Hit rigidity: Library can't do what you need, write comprehensive custom solution
+
+**The key:** Match the solution to the **problem's inherent complexity**, not just your current needs.
+
 **Example:** MIME type mapping in `src/core/cache/storage.ts`
 - Uses a simple map instead of `mime-types` library
+- Domain is simple: 10 mappings, no edge cases, no security implications
 - Only includes MIME types we actually use (YAGNI)
-- No external dependencies
-- Fast O(1) lookup, easy to extend
+- No external dependencies, fast O(1) lookup, easy to extend
+- If we needed comprehensive MIME detection from file content, we'd use a library
 
 ### Adding New Methods
 
