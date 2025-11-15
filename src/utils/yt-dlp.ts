@@ -20,9 +20,6 @@ function getYtDlpBinaryName(): string {
 	}
 
 	if (platform === "darwin") {
-		if (arch === "arm64") {
-			return "yt-dlp_macos";
-		}
 		return "yt-dlp_macos";
 	}
 

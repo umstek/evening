@@ -128,10 +128,10 @@ class Reddit {
 	}
 
 	/**
-	 * Decodes Reddit's URL encoding by removing 'amp;' occurrences
+	 * Decodes Reddit's HTML entities in URLs
 	 */
 	private decodeRedditUrl(url: string): string {
-		return url.replace(/amp;/g, "");
+		return url.replace(/&amp;/g, "&");
 	}
 
 	/**
@@ -256,6 +256,8 @@ class Reddit {
 			// Fall back to direct download (video only, no audio)
 			logger.warn(
 				{
+					subreddit: params.subreddit,
+					id: params.id,
 					error:
 						ytDlpError instanceof Error
 							? ytDlpError.message
@@ -263,7 +265,8 @@ class Reddit {
 				},
 				"yt-dlp failed, falling back to direct download",
 			);
-			content = await this.getMedia({ url: redditVideo.fallback_url });
+			const fallbackUrl = this.decodeRedditUrl(redditVideo.fallback_url);
+			content = await this.getMedia({ url: fallbackUrl });
 		}
 
 		return {
@@ -365,7 +368,7 @@ async function main() {
 	}
 }
 
-if (require.main === module) {
+if (import.meta.main) {
 	main();
 }
 

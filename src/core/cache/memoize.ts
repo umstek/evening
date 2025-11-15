@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import defaultLogger from "../../logger";
 import { calls as callsTable, db } from "./db";
-import { loadContent, saveContent } from "./storage";
+import { getContentInfo, loadContent, saveContent } from "./storage";
 
 const logger = defaultLogger.child({ module: "memoize" });
 
@@ -87,7 +87,10 @@ export function memoize(options: MemoizeOptions = {}) {
 
 					const contentBuffer = await loadContent(cached.contentHash);
 
-					if (cached.contentHash.endsWith(".json")) {
+					const contentInfo = await getContentInfo(cached.contentHash);
+
+					// Deserialize JSON based on MIME type, not file extension
+					if (contentInfo?.mimeType === "application/json") {
 						return JSON.parse(contentBuffer.toString());
 					}
 					return contentBuffer;
