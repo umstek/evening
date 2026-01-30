@@ -151,7 +151,7 @@ function parseTypeScriptInterface(interfaceString: string): {
 function generateZodSchema(
 	interfaceString: string,
 	sampleDataArray: Array<Record<string, unknown>>,
-): { zodSchema: string; refinedInterface: string } {
+): { zodSchema: string; refinedInterface: string; interfaceName: string } {
 	const { name, fields } = parseTypeScriptInterface(interfaceString);
 
 	const zodFields = fields
@@ -191,7 +191,7 @@ function generateZodSchema(
 
 	const refinedInterface = `export interface ${name} {\n${interfaceFields}\n}`;
 
-	return { zodSchema, refinedInterface };
+	return { zodSchema, refinedInterface, interfaceName: name };
 }
 
 /**
@@ -223,13 +223,12 @@ export const typescriptToZodTool = createTool({
 		const { interfaceString, sampleData } = context;
 
 		try {
-			const { name } = parseTypeScriptInterface(interfaceString);
 			const result = generateZodSchema(interfaceString, sampleData);
 
 			return {
 				zodSchema: result.zodSchema,
 				refinedInterface: result.refinedInterface,
-				interfaceName: name,
+				interfaceName: result.interfaceName,
 			};
 		} catch (error) {
 			throw new Error(
